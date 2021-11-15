@@ -96,12 +96,20 @@ def get_options():
 
 
 def get_driver():
-    chrome_options = webdriver.ChromeOptions()
-    chrome_options.binary_location = os.environ.get("GOOGLE_CHROME_BIN")
-    chrome_options.add_argument("--headless")
-    chrome_options.add_argument("--disable-dev-shm-usage")
-    chrome_options.add_argument("--no-sandbox")
-    driver = webdriver.Chrome(executable_path=os.environ.get("CHROMEDRIVER_PATH"), chrome_options=chrome_options)
+    # chrome_options = webdriver.ChromeOptions()
+    # chrome_options.binary_location = os.environ.get("GOOGLE_CHROME_BIN")
+    # chrome_options.add_argument("--headless")
+    # chrome_options.add_argument("--disable-dev-shm-usage")
+    # chrome_options.add_argument("--no-sandbox")
+    # driver = webdriver.Chrome(executable_path=os.environ.get("CHROMEDRIVER_PATH"), chrome_options=chrome_options)
+    # driver = webdriver.Chrome(chrome_options=chrome_options)
+
+    options = webdriver.ChromeOptions()
+    options.binary_location = os.environ.get("GOOGLE_CHROME_BIN")
+    options.add_argument("--headless")
+    options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--no-sandbox")
+    driver = webdriver.Chrome(executable_path=os.environ.get("CHROMEDRIVER_PATH"), options=options)
     return driver
     # return webdriver.Chrome(options=get_options())
 
@@ -164,6 +172,7 @@ def skybitzParse(htmltest, trailerDict):
         Longitude = table.loc[i, 'Longitude']
         t = Trailer(trailerNum, Latitude, Longitude)
         trailerDict.add_trailer(t)
+        t.printTrailer()
 
 
 def skybitztesting2(trailerDict, driver):
@@ -274,3 +283,5 @@ us_state_to_abbrev = {
     "U.S. Virgin Islands": "VI",
     "Tamaulipas": "TM"
 }
+
+run()
