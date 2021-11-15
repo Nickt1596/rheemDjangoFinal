@@ -102,6 +102,7 @@ def get_driver():
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument('--disable-gpu')
     options.add_argument("--no-sandbox")
+    options.add_argument("--window-size=1920,1080")
     driver = webdriver.Chrome(executable_path=os.environ.get("CHROMEDRIVER_PATH"), options=options)
     return driver
 
@@ -207,11 +208,12 @@ def xtraleaseParse(text, trailerDict):
 
 def run():
     trailerDict = TrailerDict()
-    with ThreadPoolExecutor(max_workers=4) as executor:
-        executor.submit(skybitztesting, trailerDict, driver=get_driver())
-        executor.submit(skybitztesting2, trailerDict, driver=get_driver())
-        executor.submit(xtralease, trailerDict, driver=get_driver())
-        executor.submit(spireon, trailerDict, driver=get_driver())
+    # with ThreadPoolExecutor(max_workers=4) as executor:
+    #     executor.submit(skybitztesting, trailerDict, driver=get_driver())
+    #     executor.submit(skybitztesting2, trailerDict, driver=get_driver())
+    #     executor.submit(xtralease, trailerDict, driver=get_driver())
+    #     executor.submit(spireon, trailerDict, driver=get_driver())
+    skybitztesting(trailerDict, get_driver())
     time.sleep(2)
     dict = trailerDict.get_dict()
     return dict
