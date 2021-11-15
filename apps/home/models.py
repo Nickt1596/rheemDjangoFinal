@@ -306,6 +306,7 @@ def calcRate(shipmentId):
 
 
 def calcShipmentMargin(shipmentId):
+
     shipment = Shipment.objects.get(id=shipmentId)
     shipment.shipmentMargin = shipment.rateTotal - shipment.rateTotalCarrier
     shipment.shipmentMarginPercentage = (shipment.shipmentMargin / shipment.rateTotal) * 100
