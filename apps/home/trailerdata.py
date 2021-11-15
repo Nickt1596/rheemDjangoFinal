@@ -268,5 +268,3 @@ us_state_to_abbrev = {
     "U.S. Virgin Islands": "VI",
     "Tamaulipas": "TM"
 }
-
-run()
