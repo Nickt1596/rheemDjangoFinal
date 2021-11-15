@@ -1,0 +1,152 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Tables Extended {% endblock title %}
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+	<div class="row">
+		<ol class="breadcrumb bg-transparent ml-3">
+			<li class="breadcrumb-item">
+				<a href="#">Home</a>
+			</li>
+			<li class="breadcrumb-item">
+				<a href="#">Tables</a>
+			</li>
+			<li class="breadcrumb-item active">Shipments</li>
+		</ol>
+		<div class="col-md-12">
+			<div class="card">
+				<div class="card-header">
+{#          <a href="{% url 'addTrailer' %}}" class="btn btn-primary btn-simple">Add Trailer</a>#}
+{#          <a href="{% url 'refreshLocations' %}" class="btn btn-primary btn-simple">Refresh locations</a>#}
+					<form method="POST">
+						{% csrf_token %}
+						<button type="submit" name="all" class="btn btn-primary btn-simple">All</button>
+						<button type="submit" name="delivered" class="btn btn-primary btn-simple">Delivered</button>
+						<button type="submit" name="intransit" class="btn btn-primary btn-simple">In Transit</button>
+						<button type="submit" name="addshipment" class="btn btn-primary btn-simple">Add Shipment</button>
+						<button type="submit" name="downloadcsv" class="btn btn-primary btn-simple">Download .CSV</button>
+					</form>
+					<h4 class="text-center">Shipment List</h4>
+				</div>
+				<div class="card-body">
+					<div class="table-responsive">
+						<table class="table table-striped">
+							<thead class="text-primary">
+							<tr>
+								<th class="">Actions</th>
+								<th class="text-center">Date Tendered</th>
+								<th class="text-center">Load Number</th>
+								<th class="text-center">Master BOL</th>
+								<th class="text-center">Carrier</th>
+								<th class="text-center">Destination</th>
+								<th class="text-center">Rate Total</th>
+								<th class="text-center">Carrier Rate</th>
+								<th class="text-center">Gross Margin</th>
+								<th class="text-center">Margin %</th>
+								<th class="text-center">Trailer</th>
+								<th class="text-left">Trailer Loc</th>
+								<th class="text-left">Delivery </th>
+							</tr>
+							</thead>
+							<tbody>
+							{% for shipment in shipments %}
+							<tr>
+								<td class="td-actions">
+							  <button class="btn btn-primary btn-sm dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+							    Edit
+							  </button>
+							  <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+							    <a class="dropdown-item" href="{% url 'updateShipment' shipment.id %}" >Edit Shipment</a>
+							    <a class="dropdown-item" href="{% url 'updateCarrierRate' shipment.id %}">Change Carrier Rate</a>
+
+								  {% if shipment.trailer is none %}
+								  <a class="dropdown-item" href="{% url 'assignShipmentTrailer' shipment.id %}">Assign Trailer</a>
+								  {% endif %}
+
+							    {% if shipment.carrier is none %}
+								  <a class="dropdown-item" href="{% url 'assignCarrier' shipment.id %}">Assign Carrier</a>
+							    {% else %}
+							    <a class="dropdown-item" href="{% url 'assignCarrier' shipment.id %}">Change Carrier</a>
+							    {% endif %}
+
+                  {% if shipment.driverName is none %}
+                  <a class="dropdown-item" href="{% url 'assignDriver' shipment.id %}">Assign Driver</a>
+							    {% else %}
+                  <a class="dropdown-item" href="{% url 'assignDriver' shipment.id %}">Change Driver</a>
+							    {% endif %}
+
+							    {% if shipment.deliveryDate is none %}
+							    <a class="dropdown-item" href="{% url 'setDeliveryAppt' shipment.id %}">Set Delivery Appointment</a>
+							    {% else %}
+							    <a class="dropdown-item" href="{% url 'setDeliveryAppt' shipment.id %}">Change Delivery Appointment</a>
+							    {% endif %}
+
+							    {% if shipment.trailer != none %}
+								    {% if shipment.trailertrip__dateYardEmpty != none and  shipment.trailertrip__dateDrayPickedUp is none %}
+								    <a class="dropdown-item" href="{% url 'setTrailerTrip' shipment.trailer__id %}">Set Date Dray PU</a>
+								    {% endif %}
+								    {% if shipment.trailertrip__dateDrayPickedUp != none and  shipment.trailertrip__dateDrayReturnedLoaded is none %}
+									  <a class="dropdown-item" href="{% url 'setTrailerTrip' shipment.trailer__id %}">Set Date Dray Returned</a>
+								    {% endif %}
+								    {% if shipment.trailertrip__dateDrayReturnedLoaded != none and  shipment.trailertrip__dateCarrierPickedUpLoaded is none %}
+									  <a class="dropdown-item" href="{% url 'setTrailerTrip' shipment.trailer__id %}">Set Date Carrier PU</a>
+								    {% endif %}
+								    {% if shipment.trailertrip__dateCarrierPickedUpLoaded != none and  shipment.trailertrip__dateCarrierDelivered is none %}
+									  <a class="dropdown-item" href="{% url 'setTrailerTrip' shipment.trailer__id %}">Set Date Delivered</a>
+								    {% endif %}
+								    {% if shipment.trailertrip__dateCarrierDelivered != none and  shipment.trailertrip__dateCarrierReturnedEmpty is none %}
+									  <a class="dropdown-item" href="{% url 'setTrailerTrip' shipment.trailer__id %}">Set Date Carrier Returned</a>
+								    {% endif %}
+							    {% endif %}
+							  </div>
+		            </td>
+								<td class="text-center">{{ shipment.dateTendered}}</td>
+								<td class="text-center">{{ shipment.loadNumber }}</td>
+								<td class="text-center">{{ shipment.masterBolNumber}}</td>
+								<td class="text-center">{{ shipment.carrier }}</td>
+								<td class="text-center">{{ shipment.destinationCity }}, {{ shipment.destinationState }}</td>
+								<td class="text-center">${{ shipment.rateTotal }}</td>
+								<td class="text-center">${{ shipment.rateTotalCarrier}}</td>
+								<td class="text-center">${{ shipment.shipmentMargin}}</td>
+								<td class="text-center">{{ shipment.shipmentMarginPercentage}}%</td>
+
+								{% if shipment.trailer__trailerNumber != none %}
+								<td class="text-center">{{ shipment.trailer__trailerNumber}}</td>
+								{% else %}
+								<td class="text-center"></td>
+								{% endif %}
+
+								{% if shipment.trailer__trailertrip__shipment__id == shipment.id %}
+								<td class="text-left">{{ shipment.trailer__trailerlocation__locationCity }},
+								{{ shipment.trailer__trailerlocation__locationState }}</td>
+								{% else %}
+								<td class="text-left"></td>
+								{% endif %}
+
+								{% if shipment.deliveryDate != none %}
+								<td class="text-left">{{ shipment.deliveryDate }},
+								{{ shipment.deliveryTime }} </td>
+								{% elif shipment.loadDelivered == False %}
+								<td class="text-left">
+								<a class="btn-sm btn-primary" href="{% url 'setDeliveryAppt' shipment.id %}" role="button">Set Delivery</a>
+								</td>
+								{% else %}
+								<td class="text-left"></td>
+								{% endif %}
+
+							</tr>
+							{% endfor %}
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE -->
+{% block javascripts %}{% endblock javascripts %}

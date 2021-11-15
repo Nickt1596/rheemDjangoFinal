@@ -1,0 +1,81 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Tables Extended {% endblock title %}
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+	<div class="row">
+		<ol class="breadcrumb bg-transparent ml-3">
+			<li class="breadcrumb-item">
+				<a href="#">Home</a>
+			</li>
+			<li class="breadcrumb-item">
+				<a href="#">Tables</a>
+			</li>
+			<li class="breadcrumb-item active">Trailer Locations</li>
+		</ol>
+		<div class="col-md-12">
+			<div class="card">
+				<div class="card-header">
+					<form method="POST">
+						{% csrf_token %}
+						<button type="submit" name="refresh" class="btn btn-primary btn-simple">Refresh locations</button>
+						<button type="submit" name="email" class="btn btn-primary btn-simple">Send E-Mail</button>
+						<button type="submit" name="csv" class="btn btn-primary btn-simple">Download .CSV</button>
+					</form>
+					<h4 class="text-center">Trailer Locations</h4>
+				</div>
+				<div class="card-body">
+					<div class="table-responsive">
+						<table class="table table-striped">
+							<thead class="text-primary">
+							<tr>
+								<th class="text-left">Update</th>
+								<th class="text-center">Trailer #</th>
+								<th class="text-left">Location</th>
+								<th class="text-left">Status</th>
+								<th class="text-center">Load Number</th>
+								<th class="text-center">Destination</th>
+								<th class="text-center">Carrier</th>
+								<th class="text-center">Driver Name</th>
+								<th class="text-center">Driver Cell</th>
+							</tr>
+							</thead>
+							<tbody>
+							{% for trailer in trailers %}
+							<tr>
+								<td class="td-actions">
+							  <button class="btn btn-primary btn-sm dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+							    Update
+							  </button>
+							  <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+							  <a class="dropdown-item" href="{% url 'setTrailerTrip' trailer.id %}">Set Date Dray PU</a>
+							  </div>
+								</td>
+								<td class="text-center">{{ trailer.trailerNumber}}</td>
+								<td class="text-left">{{ trailer.trailerlocation__locationCity }}, {{ trailer.trailerlocation__locationState }} {{ trailer.trailerlocation__locationCountry }}</td>
+								<td class="text-left">{{ trailer.trailerlocation__statusCode }}</td>
+								<td class="text-center">{{ trailer.trailertrip__shipment__loadNumber}}</td>
+								<td class="text-center">{{ trailer.trailertrip__shipment__destinationCity }}, {{ trailer.trailertrip__shipment__destinationState }}</td>
+								<td class="text-center">{{ trailer.trailertrip__shipment__carrier }}</td>
+								<td class="text-center">Holder</td>
+								<td class="text-center">Holder</td>
+							</tr>
+							{% endfor %}
+              <tr>
+                <td class="text-right">Last Updated:</td>
+	              <td class="text-left">{{ timestamp }}</td>
+              </tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE -->
+{% block javascripts %}{% endblock javascripts %}

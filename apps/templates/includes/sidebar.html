@@ -1,0 +1,56 @@
+
+    <div class="sidebar">
+      <div class="sidebar-wrapper">
+        <ul class="nav">
+          <li class="{% if 'index' in segment %} active {% endif %}">
+            <a href="/">
+              <i class="tim-icons icon-chart-pie-36"></i>
+              <p>Dashboard</p>
+            </a>
+          </li>
+          <li class="{% if 'page-' in segment %} active {% endif %}">
+            <a data-toggle="collapse" href="#pagesExamples">
+              <i class="tim-icons icon-image-02"></i>
+              <p>
+                Tables
+                <b class="caret"></b>
+              </p>
+            </a>
+            <div class="collapse" id="pagesExamples">
+              <ul class="nav">
+                <li>
+                  <a href="{% url 'tripReports' %}">
+                    <span class="sidebar-mini-icon">RS</span>
+                    <span class="sidebar-normal"> Trip Reports </span>
+                  </a>
+                </li>
+                <li>
+                  <a href="{% url 'shipments' %}">
+                    <span class="sidebar-mini-icon">T</span>
+                    <span class="sidebar-normal"> Shipments </span>
+                  </a>
+                </li>
+                <li>
+                  <a href="{% url 'trailers' %}">
+                    <span class="sidebar-mini-icon">L</span>
+                    <span class="sidebar-normal"> Trailers </span>
+                  </a>
+                </li>
+                <li>
+                  <a href="{% url 'trailerLocations' %}">
+                    <span class="sidebar-mini-icon">P</span>
+                    <span class="sidebar-normal"> Trailer Locations </span>
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </li>
+          <li>
+              <a href="{% url 'logout' %}" >
+                <i class="tim-icons icon-user-run"></i>
+                <p>Logout</p>
+              </a>
+            </li>          
+        </ul>
+      </div>
+    </div>

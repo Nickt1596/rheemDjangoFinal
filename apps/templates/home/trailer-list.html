@@ -1,0 +1,63 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Tables Extended {% endblock title %}
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+	<div class="row">
+		<ol class="breadcrumb bg-transparent ml-3">
+			<li class="breadcrumb-item">
+				<a href="#">Home</a>
+			</li>
+			<li class="breadcrumb-item">
+				<a href="#">Tables</a>
+			</li>
+			<li class="breadcrumb-item active">Trailer</li>
+		</ol>
+		<div class="col-md-12">
+			<div class="card">
+				<div class="card-header">
+					<form method="POST">
+						{% csrf_token %}
+						<button type="submit" name="addtrailer" class="btn btn-primary btn-simple">Add Trailer</button>
+					</form>
+					<h4 class="text-center">Trailer List</h4>
+				</div>
+				<div class="card-body">
+					<div class="table-responsive">
+						<table class="table table-striped">
+							<thead class="text-primary">
+							<tr>
+								<th class="text-center">Trailer #</th>
+								<th class="text-center">Plate #</th>
+								<th class="text-center">Plate State</th>
+								<th class="text-center">Lease Company</th>
+								<th class="text-center">Actions</th>
+							</tr>
+							</thead>
+							<tbody>
+							{% for trailer in trailers %}
+							<tr>
+								<td class="text-center">{{ trailer.trailerNumber}}</td>
+								<td class="text-center">{{ trailer.trailerPlateNumber }}</td>
+								<td class="text-center">{{ trailer.trailerPlateState }}</td>
+								<td class="text-center">{{ trailer.trailerLeaseCompany }}</td>
+		            <td class="td-actions text-center">
+		                <a href="{% url 'updateTrailer' trailer.id %}" class="btn btn-primary btn-sm">Edit</a>
+		                <a href="{% url 'deleteTrailer' trailer.id %}" class="btn btn-danger btn-sm">Delete</a>
+		            </td>
+							</tr>
+							{% endfor %}
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE -->
+{% block javascripts %}{% endblock javascripts %}

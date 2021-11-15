@@ -1,0 +1,46 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Tables Extended {% endblock title %}
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+<div class="card">
+  <div class="card-body">
+    <form method="POST">
+	    {% csrf_token %}
+	    {% for field in form %}
+	    {% if field.name != 'customCarrierRate' and field.name != 'trailer'%}
+      <div class="form-group">
+        <label>{{ field.label }}</label>
+        {{ field }}
+      </div>
+	    {% elif field.name == 'customCarrierRate' %}
+      <div class="form-check">
+	      <label class="form-check-label">
+		      {{ field.label }}
+		      {{ field }}
+          <span class="form-check-sign">
+            <span class="check"></span>
+          </span>
+	      </label>
+      </div>
+	    {% else %}
+      <div class="form-group">
+        <label for="selectTrailer">{{ field.label }}</label>
+		      {{ form.trailer }}
+      </div>
+	    {% endif %}
+	    {% endfor %}
+      <div class="card-footer">
+        <button type="submit" class="btn btn-fill btn-primary">Submit</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE -->
+{% block javascripts %}{% endblock javascripts %}

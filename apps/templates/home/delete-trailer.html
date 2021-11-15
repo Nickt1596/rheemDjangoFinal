@@ -1,0 +1,22 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Tables Extended {% endblock title %}
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+<div class="card text-center" style="width: 30rem;">
+	<div class="card-body">
+    <form method="POST">
+    {% csrf_token %}
+		<h4 class="card-title">Are You sure you want to delete Trailer {{ object }}?</h4>
+		<button type="submit" class="btn btn-fill btn-primary">Delete</button>
+    <a href="{% url 'trailers' %}" class="btn btn-primary">Cancel</a>
+    </form>
+	</div>
+</div>
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE -->
+{% block javascripts %}{% endblock javascripts %}

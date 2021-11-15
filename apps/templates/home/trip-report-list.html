@@ -1,0 +1,68 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Tables Extended {% endblock title %}
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+	<div class="row">
+		<ol class="breadcrumb bg-transparent ml-3">
+			<li class="breadcrumb-item">
+				<a href="#">Home</a>
+			</li>
+			<li class="breadcrumb-item">
+				<a href="#">Tables</a>
+			</li>
+			<li class="breadcrumb-item active">Trip Reports</li>
+		</ol>
+		<div class="col-md-12">
+			<div class="card">
+				<div class="card-header">
+					<h4 class="text-center">Trip Reports</h4>
+				</div>
+				<div class="card-body">
+					<div class="table-responsive">
+						<table class="table table-striped">
+							<thead class="text-primary">
+							<tr>
+								<th class="text-left">Shipment #</th>
+								<th class="text-left">Trailer #</th>
+								<th class="text-left">Destination</th>
+								<th class="text-left">Start Date</th>
+								<th class="text-left">End Date</th>
+								<th class="text-left">Total Days</th>
+								<th class="text-left">Trailer Days Owed</th>
+								<th class="text-left">Total Trailer Cost</th>
+								<th class="text-left">Gross Margin</th>
+								<th class="text-left">Net Margin</th>
+								<th class="text-left">Net Margin + Trailer</th>
+							</tr>
+							</thead>
+							<tbody>
+							{% for report in tripreports %}
+							<tr>
+								<td class="text-left">{{ report.shipment__loadNumber }}</td>
+								<td class="text-left">{{ report.trailer__trailerNumber }}</td>
+								<td class="text-left">{{ report.shipment__destinationCity }}, {{ report.shipment__destinationState }}</td>
+								<td class="text-left">{{ report.startDate }}</td>
+								<td class="text-left">{{ report.endDate }}</td>
+								<td class="text-left">{{ report.totalDays }}</td>
+								<td class="text-left">{{ report.trailerDaysOwed }}</td>
+								<td class="text-left">${{ report.totalTrailerCost }}</td>
+								<td class="text-left">${{ report.grossMargin }}</td>
+								<td class="text-left">${{ report.netMargin }}</td>
+								<td class="text-left">${{ report.netMarginAfterTrailer }}</td>
+							</tr>
+							{% endfor %}
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE -->
+{% block javascripts %}{% endblock javascripts %}
