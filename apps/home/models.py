@@ -436,7 +436,7 @@ def trailerLocQuery():
     #     'shipment__id'
     # ).order_by('-trailerlocation__statusCode')
 
-    trailers = TrailerLocation.objects.all().values(
+    trailers = TrailerLocation.objects.values(
         'trailer__trailerNumber',
         'trailer__id',
         'locationCity',
