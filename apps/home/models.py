@@ -443,17 +443,7 @@ def trailerLocQuery():
         'locationState',
         'locationCountry',
         'statusCode',
-        'updated_at',
-        'trailer__shipment__loadNumber',
-        'trailer__shipment__destinationCity',
-        'trailer__shipment__destinationState',
-        'trailer__shipment__carrier'
-        # 'trailertrip__shipment__loadNumber',
-        # 'trailertrip__shipment__destinationCity',
-        # 'trailertrip__shipment__destinationState',
-        # 'trailerlocation__updated_at',
-        # 'trailertrip__shipment__carrier',
-        # 'shipment__id'
+        'updated_at'
     ).order_by('-trailer__trailerNumber')
     return trailers
 
