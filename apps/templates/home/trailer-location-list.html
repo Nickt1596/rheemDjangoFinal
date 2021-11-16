@@ -45,6 +45,7 @@
 							</thead>
 							<tbody>
 							{% for trailer in trailers %}
+							{% for trip in trips %}
 							<tr>
 								<td class="td-actions">
 							  <button class="btn btn-primary btn-sm dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -60,12 +61,13 @@
 {#								<td class="text-center">{{ trailer.trailertrip__shipment__loadNumber}}</td>#}
 {#								<td class="text-center">{{ trailer.trailertrip__shipment__destinationCity }}, {{ trailer.trailertrip__shipment__destinationState }}</td>#}
 {#								<td class="text-center">{{ trailer.trailertrip__shipment__carrier }}</td>#}
-								<td class="text-center">Holder</td>
-								<td class="text-center">Holder</td>
-								<td class="text-center">Holder</td>
+								<td class="text-center">{{ trip.shipment__loadNumber }}</td>
+								<td class="text-center">{{ trip.shipment__destinationCity }}, {{ trip.shipment__destinationState }}</td>
+								<td class="text-center">{{ trip.shipment__carrier }}</td>
 								<td class="text-center">Holder</td>
 								<td class="text-center">Holder</td>
 							</tr>
+							{% endfor %}
 							{% endfor %}
               <tr>
                 <td class="text-right">Last Updated:</td>

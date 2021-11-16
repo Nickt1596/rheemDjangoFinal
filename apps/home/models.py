@@ -306,7 +306,6 @@ def calcRate(shipmentId):
 
 
 def calcShipmentMargin(shipmentId):
-
     shipment = Shipment.objects.get(id=shipmentId)
     shipment.shipmentMargin = shipment.rateTotal - shipment.rateTotalCarrier
     shipment.shipmentMarginPercentage = (shipment.shipmentMargin / shipment.rateTotal) * 100
@@ -451,8 +450,19 @@ def trailerLocQuery():
         # 'trailerlocation__updated_at',
         # 'trailertrip__shipment__carrier',
         # 'shipment__id'
-    ).order_by('-statusCode')
+    ).order_by('-trailer__trailerNumber')
     return trailers
+
+
+def trailerTripShipQuery():
+    trips = TrailerTrip.objects.all().values(
+        'trailer__trailerNumber',
+        'shipment__loadNumber',
+        'shipment__destinationCity',
+        'shipment__destinationState',
+        'shipment__carrier'
+    ).order_by('-trailer__trailerNumber')
+    return trips
 
 
 def tripReportQuery():

@@ -100,9 +100,10 @@ def deleteTrailer(request, pk):
 @login_required(login_url="/login/")
 def trailerLocations(request):
     trailers = trailerLocQuery()
+    trips = trailerTripShipQuery()
     timestamp = trailers[0]['updated_at']
 
-    context = {'trailers': trailers, 'timestamp': timestamp}
+    context = {'trailers': trailers, 'trips': trips, 'timestamp': timestamp}
     if request.method == 'POST':
         if 'refresh' in request.POST:
             updateTrailerLocations()
