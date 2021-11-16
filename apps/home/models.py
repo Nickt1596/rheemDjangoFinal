@@ -435,8 +435,7 @@ def trailerLocQuery():
         'trailerlocation__updated_at',
         'trailertrip__shipment__carrier',
         'shipment__id'
-    )
-        # .order_by('-trailerlocation__statusCode')
+    ).order_by('-trailerlocation__statusCode')
     return trailers
 
 
