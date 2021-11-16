@@ -443,7 +443,11 @@ def trailerLocQuery():
         'locationState',
         'locationCountry',
         'statusCode',
-        'updated_at'
+        'updated_at',
+        'trailer__shipment__loadNumber',
+        'trailer__shipment__destinationCity',
+        'trailer__shipment__destinationState',
+        'trailer__shipment__carrier'
         # 'trailertrip__shipment__loadNumber',
         # 'trailertrip__shipment__destinationCity',
         # 'trailertrip__shipment__destinationState',
@@ -452,17 +456,6 @@ def trailerLocQuery():
         # 'shipment__id'
     ).order_by('-trailer__trailerNumber')
     return trailers
-
-
-def trailerTripShipQuery():
-    trips = TrailerTrip.objects.values(
-        'trailer__trailerNumber',
-        'shipment__loadNumber',
-        'shipment__destinationCity',
-        'shipment__destinationState',
-        'shipment__carrier'
-    ).order_by('-trailer__trailerNumber')
-    return trips
 
 
 def tripReportQuery():
