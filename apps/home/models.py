@@ -455,7 +455,7 @@ def trailerLocQuery():
 
 
 def trailerTripShipQuery():
-    trips = TrailerTrip.objects.all().values(
+    trips = TrailerTrip.objects.values(
         'trailer__trailerNumber',
         'shipment__loadNumber',
         'shipment__destinationCity',
