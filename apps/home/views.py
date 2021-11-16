@@ -100,7 +100,7 @@ def deleteTrailer(request, pk):
 @login_required(login_url="/login/")
 def trailerLocations(request):
     trailers = trailerLocQuery()
-    timestamp = trailers[0]['trailerlocation__updated_at']
+    timestamp = trailers[0]['updated_at']
 
     context = {'trailers': trailers, 'timestamp': timestamp}
     if request.method == 'POST':

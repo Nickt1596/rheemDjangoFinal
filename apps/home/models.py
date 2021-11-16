@@ -422,20 +422,36 @@ def createCsv():
 
 # Various Queries To Go Below
 def trailerLocQuery():
-    trailers = Trailer.objects.all().values(
-        'trailerNumber',
-        'id',
-        'trailerlocation__locationCity',
-        'trailerlocation__locationState',
-        'trailerlocation__locationCountry',
-        'trailerlocation__statusCode',
-        'trailertrip__shipment__loadNumber',
-        'trailertrip__shipment__destinationCity',
-        'trailertrip__shipment__destinationState',
-        'trailerlocation__updated_at',
-        'trailertrip__shipment__carrier',
-        'shipment__id'
-    ).order_by('-trailerlocation__statusCode')
+    # trailers = Trailer.objects.all().values(
+    #     'trailerNumber',
+    #     'id',
+    #     'trailerlocation__locationCity',
+    #     'trailerlocation__locationState',
+    #     'trailerlocation__locationCountry',
+    #     'trailerlocation__statusCode',
+    #     'trailertrip__shipment__loadNumber',
+    #     'trailertrip__shipment__destinationCity',
+    #     'trailertrip__shipment__destinationState',
+    #     'trailerlocation__updated_at',
+    #     'trailertrip__shipment__carrier',
+    #     'shipment__id'
+    # ).order_by('-trailerlocation__statusCode')
+
+    trailers = TrailerLocation.objects.all().values(
+        'trailer__trailerNumber',
+        'trailer__id',
+        'locationCity',
+        'locationState',
+        'locationCountry',
+        'statusCode',
+        'updated_at'
+        # 'trailertrip__shipment__loadNumber',
+        # 'trailertrip__shipment__destinationCity',
+        # 'trailertrip__shipment__destinationState',
+        # 'trailerlocation__updated_at',
+        # 'trailertrip__shipment__carrier',
+        # 'shipment__id'
+    ).order_by('-statusCode')
     return trailers
 
 

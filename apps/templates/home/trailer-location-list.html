@@ -51,15 +51,18 @@
 							    Update
 							  </button>
 							  <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-							  <a class="dropdown-item" href="{% url 'setTrailerTrip' trailer.id %}">Set Date Dray PU</a>
+							  <a class="dropdown-item" href="{% url 'setTrailerTrip' trailer.trailer__id %}">Set Date Dray PU</a>
 							  </div>
 								</td>
-								<td class="text-center">{{ trailer.trailerNumber}}</td>
-								<td class="text-left">{{ trailer.trailerlocation__locationCity }}, {{ trailer.trailerlocation__locationState }} {{ trailer.trailerlocation__locationCountry }}</td>
-								<td class="text-left">{{ trailer.trailerlocation__statusCode }}</td>
-								<td class="text-center">{{ trailer.trailertrip__shipment__loadNumber}}</td>
-								<td class="text-center">{{ trailer.trailertrip__shipment__destinationCity }}, {{ trailer.trailertrip__shipment__destinationState }}</td>
-								<td class="text-center">{{ trailer.trailertrip__shipment__carrier }}</td>
+								<td class="text-center">{{ trailer.trailer__trailerNumber}}</td>
+								<td class="text-left">{{ trailer.locationCity }}, {{ trailer.locationState }} {{ trailer.locationCountry }}</td>
+								<td class="text-left">{{ trailer.statusCode }}</td>
+{#								<td class="text-center">{{ trailer.trailertrip__shipment__loadNumber}}</td>#}
+{#								<td class="text-center">{{ trailer.trailertrip__shipment__destinationCity }}, {{ trailer.trailertrip__shipment__destinationState }}</td>#}
+{#								<td class="text-center">{{ trailer.trailertrip__shipment__carrier }}</td>#}
+								<td class="text-center">Holder</td>
+								<td class="text-center">Holder</td>
+								<td class="text-center">Holder</td>
 								<td class="text-center">Holder</td>
 								<td class="text-center">Holder</td>
 							</tr>
