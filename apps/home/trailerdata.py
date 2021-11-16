@@ -208,6 +208,7 @@ def xtraleaseParse(text, trailerDict):
 
 def run():
     trailerDict = TrailerDict()
+    start = time.time()
     # with ThreadPoolExecutor(max_workers=4) as executor:
     #     executor.submit(skybitztesting, trailerDict, driver=get_driver())
     #     executor.submit(skybitztesting2, trailerDict, driver=get_driver())
@@ -219,6 +220,8 @@ def run():
     skybitztesting2(trailerDict, get_driver())
     time.sleep(1)
     dict = trailerDict.get_dict()
+    end = time.time()
+    print("Time for get_sheets(): " + str(end - start))
     return dict
 
 
