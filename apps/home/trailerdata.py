@@ -208,15 +208,15 @@ def xtraleaseParse(text, trailerDict):
 
 def run():
     trailerDict = TrailerDict()
-    with ThreadPoolExecutor(max_workers=2) as executor:
-        executor.submit(skybitztesting, trailerDict, driver=get_driver())
-        executor.submit(skybitztesting2, trailerDict, driver=get_driver())
-        executor.submit(xtralease, trailerDict, driver=get_driver())
-        executor.submit(spireon, trailerDict, driver=get_driver())
-    # skybitztesting(trailerDict, get_driver())
-    # skybitztesting2(trailerDict, get_driver())
-    # xtralease(trailerDict, get_driver())
-    # spireon(trailerDict, get_driver())
+    # with ThreadPoolExecutor(max_workers=4) as executor:
+    #     executor.submit(skybitztesting, trailerDict, driver=get_driver())
+    #     executor.submit(skybitztesting2, trailerDict, driver=get_driver())
+    #     executor.submit(xtralease, trailerDict, driver=get_driver())
+    #     executor.submit(spireon, trailerDict, driver=get_driver())
+    skybitztesting(trailerDict, get_driver())
+    skybitztesting2(trailerDict, get_driver())
+    xtralease(trailerDict, get_driver())
+    spireon(trailerDict, get_driver())
     time.sleep(2)
     dict = trailerDict.get_dict()
     return dict
