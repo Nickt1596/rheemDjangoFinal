@@ -325,17 +325,17 @@ def tripReports(request):
     return render(request, "home/trip-report-list.html", context)
 
 
-# # Displays our Carrier Charges
-# @login_required(login_url="/login/")
-# def carrierCharges(request):
-#     carriercharges = carrierChargeQuery()
-#     context = {'carriercharges': carriercharges}
-#     return render(request, "home/carrier-charge-list.html", context)
+# Displays our Carrier Charges
+@login_required(login_url="/login/")
+def carrierCharges(request):
+    carriercharges = carrierChargeQuery()
+    context = {'carriercharges': carriercharges}
+    return render(request, "home/carrier-charge-list.html", context)
 
 
-# # Displays our Rheem Charges
-# @login_required(login_url="/login/")
-# def rheemCharges(request):
-#     rheemcharges = rheemChargeQuery()
-#     context = {'rheemcharges': rheemcharges}
-#     return render(request, "home/rheem-charge-list.html", context)
+# Displays our Rheem Charges
+@login_required(login_url="/login/")
+def rheemCharges(request):
+    rheemcharges = rheemChargeQuery()
+    context = {'rheemcharges': rheemcharges}
+    return render(request, "home/rheem-charge-list.html", context)
