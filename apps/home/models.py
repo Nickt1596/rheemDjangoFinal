@@ -2,7 +2,7 @@
 """
 Copyright (c) 2019 - present AppSeed.us
 """
-
+import dateutil.tz
 from django.contrib.auth.models import User
 from django.db import models
 import uuid
@@ -14,6 +14,8 @@ from prettytable import PrettyTable
 import smtplib
 import os
 from email.message import EmailMessage
+from django.core.mail import send_mail
+from django.conf import settings
 import csv
 from geopy import distance
 
@@ -66,12 +68,14 @@ class TrailerLocation(models.Model):
                     trailerTrip.dateDrayPickedUp = date.today()
                     trailerTrip.save()
                     self.statusCode = "Currently Being Loaded in Mexico"
+                    sendStatusEmail(self.trailer.trailerNumber, self.statusCode, date.today())
             if oldLocation.statusCode == "Currently Being Loaded in Mexico":
                 if oldLocation.locationCountry == 'MX' and self.locationCountry == 'US':
                     trailerTrip = TrailerTrip.objects.get(trailer=self.trailer)
                     trailerTrip.dateDrayReturnedLoaded = date.today()
                     trailerTrip.save()
                     self.statusCode = "In Yard Loaded Awaiting Carrier Pickup"
+                    sendStatusEmail(self.trailer.trailerNumber, self.statusCode, date.today())
             if oldLocation.statusCode == "In Yard Loaded Awaiting Carrier Pickup":
                 current_cords = (self.latitude, self.longitude)
                 distanceBetween = distance.distance(yard_cords, current_cords).miles
@@ -80,6 +84,7 @@ class TrailerLocation(models.Model):
                     trailerTrip.dateCarrierPickedUpLoaded = date.today()
                     trailerTrip.save()
                     self.statusCode = "In Transit to receiver"
+                    sendStatusEmail(self.trailer.trailerNumber, self.statusCode, date.today())
             if oldLocation.statusCode == "In Transit back to Yard":
                 current_cords = (self.latitude, self.longitude)
                 distanceBetween = distance.distance(yard_cords, current_cords).miles
@@ -88,6 +93,7 @@ class TrailerLocation(models.Model):
                     trailerTrip.dateCarrierReturnedEmpty = date.today()
                     trailerTrip.save()
                     self.statusCode = "In Yard Empty Awaiting Dray Pickup"
+                    sendStatusEmail(self.trailer.trailerNumber, self.statusCode, date.today())
         super().save(*args, **kwargs)
 
 
@@ -589,6 +595,28 @@ def trailerDrayEmail(trailerList):
     return message
 
 
+# Function below used to send e-mails to advice of Status Code changes
+def sendStatusEmail(trailerNumber, statusCode, date):
+    recipient_list = ['freightpros1@shiprrexp.com ', 'nicholas.tallarico@shiprrexp.com']
+    email_from = settings.EMAIL_HOST_USER
+    if statusCode == "Currently Being Loaded in Mexico":
+        subject = 'Trailer ' + str(trailerNumber) + ' Notification: Dray has picked up'
+        message = 'Trailer ' + str(trailerNumber) + ' Has been picked by dray on ' + str(date)
+    elif statusCode == "In Yard Loaded Awaiting Carrier Pickup":
+        subject = 'Trailer ' + str(trailerNumber) + ' Notification: In yard loaded'
+        message = 'Trailer ' + str(trailerNumber) + ' Has been returned loaded by Dray on ' + str(date)
+    elif statusCode == "In Transit to receiver":
+        subject = 'Trailer ' + str(trailerNumber) + ' Notification: Carrier Picked Up'
+        message = 'Trailer ' + str(trailerNumber) + ' Has been picked by the carrier on ' + str(date)
+    elif statusCode == "In Yard Empty Awaiting Dray Pickup":
+        subject = 'Trailer ' + str(trailerNumber) + ' Notification: Carrier Returned Empty Trailer'
+        message = 'Trailer ' + str(trailerNumber) + ' Has been returned empty by the carrier on ' + str(date)
+    else:
+        subject = 'Error'
+        message = 'Error'
+    send_mail(subject, message, email_from, recipient_list)
+
+
 ###################
 # Query Functions #
 ###################
@@ -822,7 +850,7 @@ def rheemChargeQuery():
         'chargeType',
         'amountOwed',
         'paid'
-    ).order_by('-dateOccurred')
+    ).order_by('-startDate')
     return rheemCharges
 
 
