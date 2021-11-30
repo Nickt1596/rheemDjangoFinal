@@ -1,0 +1,82 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Tables Extended {% endblock title %}
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+	<div class="row">
+		<ol class="breadcrumb bg-transparent ml-3">
+			<li class="breadcrumb-item">
+				<a href="#">Home</a>
+			</li>
+			<li class="breadcrumb-item">
+				<a href="#">Tables</a>
+			</li>
+			<li class="breadcrumb-item active">Rheem Charges</li>
+		</ol>
+		<div class="col-md-12">
+			<div class="card">
+				<div class="card-header">
+{#					<form method="POST">#}
+{#						{% csrf_token %}#}
+{#						<button type="submit" name="refresh" class="btn btn-primary btn-simple">Refresh locations</button>#}
+{#						<button type="submit" name="email" class="btn btn-primary btn-simple">Send E-Mail</button>#}
+{#						<button type="submit" name="csv" class="btn btn-primary btn-simple">Download .CSV</button>#}
+{#					</form>#}
+					<h4 class="text-center">Rheem Charges</h4>
+				</div>
+				<div class="card-body">
+					<div class="table-responsive">
+						<table class="table table-striped">
+							<thead class="text-primary">
+							<tr>
+								<th class="text-left">Status</th>
+								<th class="text-center">Trailer #</th>
+								<th class="text-center">Shipment #</th>
+								<th class="text-center">Start Date</th>
+								<th class="text-center">End Date</th>
+								<th class="text-center">Charge Type</th>
+								<th class="text-center">Amount Owed</th>
+							</tr>
+							</thead>
+							<tbody>
+							{% for charge in rheemcharges %}
+							<tr>
+{#								<td class="td-actions">#}
+{#							  <button class="btn btn-primary btn-sm dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">#}
+{#							    Update#}
+{#							  </button>#}
+{#							  <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">#}
+{#							  <a class="dropdown-item" href="{% url 'setTrailerTrip' trailer.trailer__id %}">Set Date Dray PU</a>#}
+{#							  </div>#}
+{#								</td>#}
+								{% if charge.paid is True %}
+								<td class="text-left">Paid</td>
+								{% else %}
+								<td class="text-left">Owed</td>
+								{% endif %}
+								<td class="text-center">{{ charge.trailer__trailerNumber }}</td>
+								<td class="text-center">{{ charge.shipment__loadNumber }}</td>
+								<td class="text-center">{{ charge.startDate }}</td>
+								<td class="text-center">{{ charge.endDate }}</td>
+								<td class="text-center">{{ charge.chargeType }}</td>
+								<td class="text-center">${{ charge.amountOwed}}</td>
+							</tr>
+							{% endfor %}
+{#              <tr>#}
+{#                <td class="text-right">Last Updated:</td>#}
+{#	              <td class="text-left">{{ timestamp }}</td>#}
+{#              </tr>#}
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE -->
+{% block javascripts %}{% endblock javascripts %}

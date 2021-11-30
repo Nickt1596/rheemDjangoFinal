@@ -1,0 +1,482 @@
+Main Pages
+
+1. Trailers
+2. Trailer Locations
+3. Shipments
+4. Trip Reports
+
+1. Trailers Page Breakdown
+
+Views Used
+    - trailers()
+        Description
+            - Displays The Trailer Table
+        Queries Used
+            - Trailer.objects.all().values()
+        Templates Used
+            - trailer-list.html
+        Features
+            - Edit/Delete Trailer
+            - Add Trailer Button
+        Future Implementation Ideas
+            - None
+        Current Issues
+            - None
+    - addTrailer()
+        Description
+            - Displays form to add a new trailer
+        Forms Used
+            - TrailerForm()
+        Templates Used
+            - add-trailer.html
+        Future Implementation Ideas
+            - None
+        Current Issues
+            - None
+
+2. Trailer Locations Page Breakdown
+Views Used
+    - trailerLocations()
+        Description
+            - Displays a table with all the trailers and their current locations as well as
+            - The current shipment and corresponding issue currently assigned to the trailer
+        Queries Used
+            - trailerLocQuery()
+        Templates Used
+            - trailer-location-list.html
+            - email-form.html
+        Functions Used
+            - updateTrailerLocations()
+        Features
+            - Update button which allows user to set the date dray picked up the trailer
+            - Refresh Location Button which gets up to date tracking location via selenium
+            - E-mail which renders the Email-Form to send various e-mails
+        Future Implementation Ideas
+            - None
+        Current Issues
+            - updateTrailerLocations is facing timeout errors on Heroku
+    - setTrailerTrip()
+        Description
+            - Renders the form to update the dates on a shipment/trailer
+        Queries Used
+            - TrailerTrip.objects.get(trailer=pk)
+        Templates Used
+            - set-trailertrip.html
+        Functions Used
+            - None
+        Features
+            - Renders a form and gets input from User to assign to the correct model
+        Future Implementation Ideas
+            - None
+        Current Issues
+            - Currently it redirects back to the shipment view even when coming from the Trailer Loc View
+
+3. Shipments Page Breakdown
+Views Used
+    - shipments()
+        Description
+            - Displays the shipment load data, can filters by all/delivered/in transit
+        Queries Used
+            - shipmentAllQuery()
+            - shipmentDeliveredQuery()
+            - shipmentTransitQuery()
+        Templates Used
+            - shipment-list.html
+        Functions Used
+            - None
+        Features
+            - Filter Shipment Data by All/Delivered/In-Transit
+            - Edit button to do most of the things down below
+            - Add Shipment Button
+            - Download .CSV Button
+        Future Implementation Ideas
+            - None
+        Current Issues
+            - Need to implement CSV Button to properly download on Heroku
+    - addShipment()
+        Description
+            - Renders a form to add a shipment
+        Queries Used
+            - None
+        Templates Used
+            - add-shipment.html
+        Forms Used
+            - ShipmentForm()
+        Functions Used
+            - None
+        Features
+            - Gets user input and validates and then inputs into Model
+        Future Implementation Ideas
+            - None
+        Current Issues
+            - None
+    - updateShipment()
+        Description
+            - Updates an existing shipment
+        Queries Used
+            - Shipment.objects.get(id=pk)
+        Templates Used
+            - add-shipment.html
+        Forms Used
+            - ShipmentForm()
+        Functions Used
+            - None
+        Features
+            - Updates existing shipment
+        Future Implementation Ideas
+            - None
+        Current Issues
+            - None
+    - updateCarrierRate()
+        Description
+            - Set a customer carrier Rate
+        Queries Used
+            - Shipment.objects.get(id=pk)
+        Templates Used
+            - add-carrierrate.html
+        Forms Used
+            - CarrierRateForm
+        Functions Used
+            - None
+        Features
+            - Updates a shipment with a custom carrier rate
+        Future Implementation Ideas
+            - None
+        Current Issues
+            - None
+    - assignShipmentTrailer()
+        Description
+            - Assign a trailer to a shipment
+        Queries Used
+            - Shipment.objects.get(id=pk)
+        Templates Used
+            - assign-trailer.html
+        Forms Used
+            - AssignTrailerForm()
+        Functions Used
+            - None
+        Features
+            - Assign a trailer to a shipment
+        Future Implementation Ideas
+            - None
+        Current Issues
+            - None
+    - assignCarrier()
+        Description
+            - Assign a carrier to a shipment
+        Queries Used
+            - Shipment.objects.get(id=pk)
+        Templates Used
+            - assign-carrier.html
+        Forms Used
+            - AssignCarrierForm()
+        Functions Used
+            - None
+        Features
+            - Assigns a carrier to a shipment
+        Future Implementation Ideas
+            - None
+        Current Issues
+            - None
+    - setDeliveryAppt()
+        Description
+            - Sets the delivery appointment for a shipment
+        Queries Used
+            - Shipment.objects.get(id=pk)
+        Templates Used
+            - set-delivery.html
+        Forms Used
+            - ShipmentDeliveryForm()
+        Functions Used
+            - None
+        Features
+            - Sets the delivery appointment for a shipment
+        Future Implementation Ideas
+            - None
+        Current Issues
+            - None
+    - setTrailerTrip()
+        Description
+            - Sets the various dates needed
+        Queries Used
+            - TrailerTrip.objects.get(trailer=pk
+        Templates Used
+            - set-trailertrip.html
+        Forms Used
+            - TrailerTripForm()
+        Functions Used
+            - None
+        Features
+            - Gets dates and inputs them correctly.
+        Future Implementation Ideas
+            - None
+        Current Issues
+            - None
+    - assignDriver()
+        Description
+            - Assigns a driver to a shipment
+        Queries Used
+            - Shipment.objects.get(id=pk)
+        Templates Used
+            - trip-report-list.html
+        Forms Used
+            - AssignDriverForm()
+        Functions Used
+            - None
+        Features
+            - Assigns a driver to a shipment
+        Future Implementation Ideas
+            - Possibly combining this with assignCarrier()
+        Current Issues
+            - None
+
+4. Trip Report Page Breakdown
+Views Used
+    - tripReports()
+        Description
+            - Displays the Trip Report Table
+        Queries Used
+            - tripReportQuery()
+        Templates Used
+            - trip-report-list.html
+        Features
+            - No additional features besides displaying
+        Future Implementation Ideas
+            - Download .CSV
+        Current Issues
+            - None
+
+Testing to be Completed
+Testing will be done on a model by model basis.
+1. Trailer
+2. Trailer Location
+3. Shipment
+4. TrailerTrip
+5. Trip Report
+
+1. Trailer Model Breakdown
+Additional Features
+    - When adding a new Trailer, create an entry in TrailerLocation and TrailerTrip
+Tests to be completed - Testing Completed
+    a. Verify an entry can't be added if fields are missing - Done
+    b. Verify a duplicate entry can't be made (trailerNumber must be unique) - Done
+    c. Verify that a TrailerLocation and TrailerTrip Entry are created when a new Trailer is added. - done
+
+2. Trailer Location Model Breakdown
+No tests to be completed at this time.
+
+3. Shipment Model Breakdown
+Additional Features
+    - Calculate Shipment Rate for Carrier
+    - Calculate the Shipment Margin
+    - Update The Trailer Trip when a trailer number is added (Adds the shipment to the Trailer Trip Model)
+
+
+Fields for when adding a new shipment
+
+Required Fields
+    dateTendered
+    loadNumber
+    masterBolNumber
+    carrier
+    destinationCity
+    destinationState
+    rateLineHaul
+    rateFSC
+    rateExtras
+    carrier
+
+Optional Fields
+    loadDelivered (Restrict this to not being able to be selected when adding a shipment)
+    customCarrierRate
+    deliveryDate
+    deliveryTime
+    driverName
+    driverCell
+    trailer
+
+Calculated Fields
+    rateTotal (Don't allow this to be edited - calculated only)
+    rateTotalCarrier (If user entered, verify it doesn't exceed rateTotal)
+    shipmentMargin (Don't allow this to be edited - calculated only)
+    shipmentMarginPercentage (Don't allow this to be edited - calculated only)
+
+Possible Scenarios When Adding a Shipment - ALL TESTS COMPLETED AND WORKS
+    a. Only required fields are entered. Then the following happens - TESTED AND WORKS CORRECTLY
+        1a. Calculate rateTotal
+        1b. Calculate rateTotalCarrier
+        1c. Calculate Shipment Margin
+        1d. Calculate Shipment Margin Percentage
+    b. Required Fields + customCarrierRate is checked - TESTED AND WORKS CORRECTLY
+        2a. Calculate rateTotal
+        2b. Set rateTotalCarrier = 0.00
+        2c. Don't calculate any Margin
+    c. Required Fields + Value entered in rateTotalCarrier - This is actually not possible since it isn't available on the form
+        3a. Set customCarrierRate to True
+        3b. Calculate rateTotal
+        3c. Calculate Shipment Margin
+        3d. Calculate Shipment Margin Percentage
+    d. Required Fields + Trailer Selected - TESTED AND WORKS CORRECTLY
+        4a. Follow the steps in scenario a
+        4b. Save the shipment entry, then find the trailerTrip that matches the trailer Number, and update
+            the trailer trip with the shipment load number.
+
+Possible Scenarios When Editing a Shipment
+    a. Carrier Rate is changed - TESTED AND WORKS CORRECTLY
+        1a. Set customCarrierRate to True
+        1b. Re-calculate Shipment Margin and Percentage.
+    b. Trailer Number is changed - TESTED AND WORKS CORRECTLY
+        2a. Before saving the entry, find the trailerTrip that matches the old trailer number, and update the trailer
+            trip Shipment to NULL
+        2b. Save the shipment entry, then update the corresponding TrailerTrip
+    c. Rate is changed - Tested and Results below (Need to add in to check if Custom Carrier Rate is True)
+        3a. Follow steps from scenario a above. - Properly recalculated
+
+Handling Logic from The Shipments URL
+
+Actions available to the user
+Edit Shipment
+Change Carrier Rate
+Assign Trailer / Change Trailer
+Assign Carrier / Change Carrier
+Assign Driver / Change Driver
+Set Delivery Appointment / Change Delivery Appointment
+Set Date Dray PU
+Set Date Dray Returned
+Set Date Carrier PU
+Set Date Delivered
+Set Date Carrier Returned
+
+Actions always available
+Edit Shipment
+Change Carrier Rate
+
+Actions Conditionally Available
+Set Date Dray PU
+Set Date Dray Returned
+Set Date Carrier PU
+Set Date Delivered
+Set Date Carrier Returned
+
+Actions That Change from Assign to Change
+Assign Trailer / Change Trailer
+Assign Carrier / Change Carrier
+Assign Driver / Change Driver
+Set Delivery Appointment / Change Delivery Appointment
+
+Logic for Actions That Change from Assign to Change
+    1. If those fields are None, we display Assign. If not none, we display Change.
+
+Logic for Conditionally Available
+    1. Set Date Dray PU
+        1a. Not displayed until a Trailer has been selected
+    2. Logic for the next 3 Set Dates
+        1a. If the Current Set Date == None and Prior is not none, then display that action.
+    3. Date Delivered Date is set
+        1a. Update Shipment to Load Delivered
+
+
+
+Trailer Trip Model Breakdown
+
+This model is never user created, for every trailer, there is exactly one Trailer Trip Model Entry
+
+Fields
+    shipment
+    dateYardEmpty
+    dateDrayPickedUp
+    dateDrayReturnedLoaded
+    dateCarrierPickedUpLoaded
+    dateCarrierDelivered
+    dateCarrierReturnedEmpty
+
+General Rules
+    1. Throw error if a later date field is edited, while an earlier one, is still blank.
+        (This may already be handled via the Jinga Logic I have)
+
+TESTED AND COMPLETED
+Possible Scenarios when Updating a Trailer Trip
+    a. dateCarrierReturnedEmpty is entered and saved.
+        1a. Save the Entry
+        1b. Create a query of the current Trailer Trip entry
+        1c. Generate a Trip Report based on that information
+        1d. Reset the Trailer Trip form by doing the following
+            1. Assign dateCarrierReturnedEmpty to a variable.
+            2. Reset Shipment to None
+            3. Set dateYardEmpty to the variable in step 1.
+            4. Set all other fields to none
+            5. Save
+
+
+
+Project Future Implementation Ideas
+Tables to Implement in the future
+1. Expense Table
+2. Rheem Charges
+3. Carrier Charges
+
+Expense Table Breakdown
+Example expenses
+    - Yard Rent (Monthly Reoccuring)
+    - Trailer Expenses
+    - Trailer Repairs
+    - Temp Storage
+    - Loadout Cost
+
+Rheem Charges
+Example Charges
+    - Detention ($40/hr after 3 hours)
+    - Reconsignment ($75)
+    - Driver-Assist ($100)
+    - TONU ($200)
+    - Storage Fee's ($50/day after 3 days)
+Fields Needed
+    - Amount Owed
+    - Charge Type
+    - Load Number
+    - BOL Number
+    - Trailer Number
+    - Date of Occurrence (May be start to end if Storage Fee's)
+    - Bool Collected
+Logic Ideas
+    - If Detention Charge manually enter
+    - Reconsignment Charge manually enter
+    - Driver-Assist Manually enter
+    - TONU Manually enter
+    - Store Fee's we can Calculate based off of Trailer Trip
+        - When Date Dray Returned Loaded is saved to Trailer Trip
+            a. Check if Days between Dray PU and Dray Returned is greater than 3
+            b. If so, create an entry into Rheem Charges
+
+
+Carrier Charges
+Example Charges
+    - Trailer Rent ($30/Day after 7 days from Date PU to returned Empty)
+Fields Needed
+    - Amount Owed
+    - Days Owed
+    - Load Number (From Shipment)
+    - Trailer Number (From Trip Report)
+    - Carrier Name (From Shipment)
+    - Driver Name (From Shipment)
+    - Date Trailer Picked Up Loaded (From Trip Report)
+    - Date Trailer Returned Empty (From Trip Report)
+    - Bool Collected
+Ideas
+    - Can be calculated by the following
+    - When saving a Trip Report, if trailerDaysOwed is > 0
+        - Sets Days Owed to trailerDaysOwed
+        - Amount Owed = trailerDaysOwed * 30
+
+
+To do List for Carrier/Rheem Charges as of 11/26
+Carrier
+1. Button to Updated as Paid
+2. Form to add an expense
+Rheem
+1. Button to Updated as Paid
+2. Field to mark as billed (Payment request sent to Rheem)
+3. Form to add an expense
+
+Other To do list as of 11/26
+1. Fix Email Form and Dynamically Create the Form

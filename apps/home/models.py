@@ -22,7 +22,7 @@ from geopy import distance
 
 # This model will not change much. Only possible changes are when a new trailer is added or removed
 class Trailer(models.Model):
-    trailerNumber = models.CharField(max_length=200)
+    trailerNumber = models.CharField(max_length=200, unique=True)
     trailerPlateState = models.CharField(max_length=30)
     trailerPlateNumber = models.CharField(max_length=30)
     trailerLeaseCompany = models.CharField(max_length=200)
@@ -85,17 +85,52 @@ class Shipment(models.Model):
         return self.loadNumber + " " + self.destinationCity + " " + self.destinationState
 
     def save(self, *args, **kwargs):
+        created = self._state.adding is True
+        if created:
+            self.calcRate()
+            if self.customCarrierRate is False:
+                self.calcShipmentMargin()
+            if self.trailer is not None:
+                super().save(*args, **kwargs)
+                self.updateTrailerTrip()
+        else:
+            oldShipment = Shipment.objects.get(id=self.id)
+            if self.rateTotalCarrier != oldShipment.rateTotalCarrier:
+                self.customCarrierRate = True
+                self.calcShipmentMargin()
+            if self.trailer != oldShipment.trailer:
+                oldTrailerTrip = TrailerTrip.objects.get(shipment=oldShipment.id)
+                oldTrailerTrip.shipment = None
+                oldTrailerTrip.save()
+                self.updateTrailerTrip()
+            newRateTotal = self.rateLineHaul + self.rateFSC + self.rateExtras
+            if oldShipment.rateTotal != newRateTotal:
+                self.calcRate()
+                self.calcShipmentMargin()
         super().save(*args, **kwargs)
-        if self.customCarrierRate is False and self.rateTotalCarrier == 0.00:
-            calcRate(self.id)
-            calcShipmentMargin(self.id)
-        if self.shipmentMargin is None:
-            calcShipmentMargin(self.id)
-        if self.trailer is not None and self.loadDelivered is False:
-            updateTrailerTrip(self.id, self.trailer.id)
+
+    def calcRate(self):
+        self.rateTotal = self.rateLineHaul + self.rateFSC + self.rateExtras
+        if self.customCarrierRate is False:
+            if checkRate(self.destinationState) is False:
+                self.rateTotalCarrier = ((self.rateLineHaul * Decimal(0.8)) + self.rateFSC + self.rateExtras) \
+                                        - Decimal(250)
+            else:
+                rateList = checkRate(self.destinationState)
+                miles = self.rateLineHaul / Decimal(rateList[1])
+                linehaul = Decimal(miles) * Decimal(rateList[2])
+                self.rateTotalCarrier = ((linehaul * Decimal(0.8)) + self.rateFSC + self.rateExtras) - Decimal(250)
+
+    def calcShipmentMargin(self):
+        self.shipmentMargin = self.rateTotal - self.rateTotalCarrier
+        self.shipmentMarginPercentage = (self.shipmentMargin / self.rateTotal) * 100
+
+    def updateTrailerTrip(self):
+        trailerTrip = TrailerTrip.objects.get(trailer=self.trailer)
+        trailerTrip.shipment = self
+        trailerTrip.save()
 
 
-# For every shipment there will be a TrailerTrip entry that relates to it. Also a one to one relationship.
 class TrailerTrip(models.Model):
     trailer = models.OneToOneField(Trailer, on_delete=models.CASCADE)
     shipment = models.OneToOneField(Shipment, on_delete=models.PROTECT, null=True, blank=True)
@@ -112,13 +147,50 @@ class TrailerTrip(models.Model):
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-        if self.dateCarrierReturnedEmpty is not None:
-            createTripReport(self.id, self.shipment.id, self.trailer.id)
-            resetTrailerTrip(self.id)
         if self.dateCarrierDelivered is not None:
             shipment = Shipment.objects.get(id=self.shipment.id)
             shipment.loadDelivered = True
             shipment.save()
+        if self.dateDrayReturnedLoaded is not None:
+            daysWithDray = (self.dateDrayReturnedLoaded - self.dateDrayPickedUp).days
+            if daysWithDray > 3:
+                rheemCharge = RheemCharge(trailer=self.trailer, shipment=self.shipment, chargeType='STOR',
+                                          daysOwed=daysWithDray - 3, startDate=self.dateDrayPickedUp,
+                                          endDate=self.dateDrayReturnedLoaded)
+                rheemCharge.save()
+        if self.dateCarrierReturnedEmpty is not None:
+            self.createTripReport()
+        super().save(*args, **kwargs)
+
+    def createTripReport(self):
+        newTripReport = TripReport(trailer=self.trailer, shipment=self.shipment)
+        newTripReport.daysYardEmpToDrayPu = (self.dateDrayPickedUp - self.dateYardEmpty).days
+        newTripReport.daysDrayPuToYardLoad = (self.dateDrayReturnedLoaded - self.dateDrayPickedUp).days
+        newTripReport.daysYardLoadToCarrPu = (self.dateCarrierPickedUpLoaded - self.dateDrayReturnedLoaded).days
+        newTripReport.daysCarrPuToDeliv = (self.dateCarrierDelivered - self.dateCarrierPickedUpLoaded).days
+        newTripReport.daysDelivToRetEmp = (self.dateCarrierReturnedEmpty - self.dateCarrierDelivered).days
+        newTripReport.trailerDaysOwed = calcTrailerDaysOwed(newTripReport.daysCarrPuToDeliv +
+                                                            newTripReport.daysDelivToRetEmp)
+        newTripReport.totalDays = (newTripReport.daysYardEmpToDrayPu + newTripReport.daysDrayPuToYardLoad +
+                                   newTripReport.daysYardLoadToCarrPu + newTripReport.daysCarrPuToDeliv +
+                                   newTripReport.daysDelivToRetEmp)
+        newTripReport.startDate = self.dateYardEmpty
+        newTripReport.endDate = self.dateCarrierReturnedEmpty
+        newTripReport.totalTrailerCost = Decimal(newTripReport.totalDays * getTrailerCost(self.trailer.trailerNumber))
+        newTripReport.grossMargin = self.shipment.shipmentMargin
+        newTripReport.netMargin = newTripReport.grossMargin - newTripReport.totalTrailerCost
+        newTripReport.netMarginAfterTrailer = newTripReport.netMargin + (newTripReport.trailerDaysOwed * 30)
+        newTripReport.save()
+        self.resetTrailerTrip()
+
+    def resetTrailerTrip(self):
+        self.dateYardEmpty = self.dateCarrierReturnedEmpty
+        self.shipment = None
+        self.dateDrayPickedUp = None
+        self.dateDrayReturnedLoaded = None
+        self.dateCarrierPickedUpLoaded = None
+        self.dateCarrierDelivered = None
+        self.dateCarrierReturnedEmpty = None
 
 
 class TripReport(models.Model):
@@ -143,6 +215,76 @@ class TripReport(models.Model):
         return self.trailer.trailerNumber + " " + self.shipment.loadNumber + " " + \
                str(self.startDate) + "-" + str(self.endDate)
 
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        if self.trailerDaysOwed > 0:
+            carrierCharge = CarrierCharge(tripReport=self, shipment=self.shipment, daysOwed=self.trailerDaysOwed)
+            carrierCharge.save()
+
+
+# class Expense(models.Model):
+#     PAYMENT_TERMS = [
+#         ('LUMP', 'Lump-Sum'),
+#         ('WEEK', 'Weekly'),
+#         ('MONTH', 'Monthly'),
+#     ]
+#     trailer = models.ForeignKey(Trailer, on_delete=models.PROTECT, blank=True, null=True)
+#     shipment = models.ForeignKey(Shipment, on_delete=models.PROTECT, blank=True, null=True)
+#     amountOwed = models.DecimalField(max_digits=15, decimal_places=2, default=0.00)
+#     paymentTerms = models.CharField(max_length=100, blank=True, choices=PAYMENT_TERMS, default='LUMP')
+#     expenseType = models.CharField(max_length=100, blank=True, null=True)
+#     carrier = models.CharField(max_length=100, blank=True, null=True)
+#     driver = models.CharField(max_length=100, blank=True, null=True)
+#     id = models.UUIDField(default=uuid.uuid4, unique=True, primary_key=True, editable=False)
+
+class CarrierCharge(models.Model):
+    tripReport = models.ForeignKey(TripReport, on_delete=models.PROTECT, blank=True, null=True)
+    shipment = models.ForeignKey(Shipment, on_delete=models.PROTECT, blank=True, null=True)
+    daysOwed = models.IntegerField(null=True, blank=True)
+    amountOwed = models.DecimalField(max_digits=15, decimal_places=2, default=0.00)
+    paid = models.BooleanField(default=False)
+    dateOccurred = models.DateTimeField(auto_now=True)
+    id = models.UUIDField(default=uuid.uuid4, unique=True, primary_key=True, editable=False)
+
+    def __str__(self):
+        return self.tripReport.trailer.trailerNumber + " " + self.shipment.loadNumber
+
+    def save(self, *args, **kwargs):
+        self.amountOwed = self.daysOwed * Decimal(30)
+        super().save(*args, **kwargs)
+
+
+class RheemCharge(models.Model):
+    ACCESSORIAL_TYPE = [
+        ('DET', 'Detention'),
+        ('REC', 'Reconsignment'),
+        ('ASST', 'Driver-Assist'),
+        ('TONU', 'TONU'),
+        ('STOR', 'Storage Fee'),
+        ('OTH', 'Other'),
+    ]
+    trailer = models.ForeignKey(Trailer, on_delete=models.PROTECT, blank=True, null=True)
+    shipment = models.ForeignKey(Shipment, on_delete=models.PROTECT, blank=True, null=True)
+    chargeType = models.CharField(max_length=100, blank=True, choices=ACCESSORIAL_TYPE, default='OTH')
+    daysOwed = models.IntegerField(null=True, blank=True)
+    amountOwed = models.DecimalField(max_digits=15, decimal_places=2, default=0.00)
+    startDate = models.DateField(null=True, blank=True)
+    endDate = models.DateField(null=True, blank=True)
+    paid = models.BooleanField(default=False)
+    id = models.UUIDField(default=uuid.uuid4, unique=True, primary_key=True, editable=False)
+
+    def __str__(self):
+        return self.trailer.trailerNumber + " " + self.shipment.loadNumber
+
+    def save(self, *args, **kwargs):
+        if self.chargeType == 'STOR':
+            self.amountOwed = self.daysOwed * Decimal(50)
+        super().save(*args, **kwargs)
+
+
+################################
+# Model Helper Functions Below #
+################################
 
 def createRateTable():
     rateTable = {
@@ -155,7 +297,7 @@ def createRateTable():
         'IN': [3.2, 3.4, 3.2],
         'LA': [3.45, 5.75, 4.45],
         'MA': [3.7, 4.25, 3.95],
-        'MD': [3.7, 3.95, 4.2],
+        'MD': [3.7, 3.95, 3.70],
         'MI': [2.7, 3.35, 3.0],
         'MN': [3.45, 3.55, 3.45],
         'MT': [4.2, 4.25, 4.2],
@@ -204,61 +346,6 @@ def getTrailerCost(trailerNum):
         return Decimal(40.00)
 
 
-def getLocDataList():
-    locationData = trailerLocQuery()
-
-    locationList = list(locationData)
-    properList = []
-    for i in range(len(locationList)):
-        location = locationList[i]['trailerlocation__locationCity'] + "," + \
-                   locationList[i]['trailerlocation__locationState'] + " " + \
-                   locationList[i]['trailerlocation__locationCountry']
-
-        destination = str(locationList[i]['trailertrip__shipment__destinationCity']) + "," + \
-                      str(locationList[i]['trailertrip__shipment__destinationState'])
-
-        dataList = [
-            locationList[i]['trailerNumber'],
-            location,
-            locationList[i]['trailerlocation__statusCode'],
-            locationList[i]['trailertrip__shipment__loadNumber'],
-            destination,
-            locationList[i]['trailertrip__shipment__carrier']
-        ]
-        properList.append(dataList)
-    return properList
-
-
-def getLocDataFields():
-    fields = ['Trailer #', 'Location', 'Status', 'Load #', 'Destination', 'Carrier']
-    return fields
-
-
-def getEmailTable():
-    locDataList = getLocDataList()
-    fields = getLocDataFields()
-    table = PrettyTable(fields)
-    for i in range(len(locDataList)):
-        table.add_row(locDataList[i])
-    htmlTable = table.get_html_string(format=True)
-    return htmlTable
-
-
-def sendLocEmail():
-    htmlTable = getEmailTable()
-    msg = EmailMessage()
-    msg['Subject'] = 'Trailer Locations '
-    RHEEM_EMAIL = 'RheemTrailerUpdates@gmail.com'
-    password = 'Smiley43!'
-    tolist = ['Ntgw1596@gmail.com', 'michael.kiviat@shiprrexp.com ', 'freightpros1@gmail.com ']
-    msg['From'] = RHEEM_EMAIL
-    msg['To'] = tolist
-    msg.add_alternative(htmlTable, subtype='html')
-    with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
-        smtp.login(RHEEM_EMAIL, password)
-        smtp.send_message(msg)
-
-
 def getLocations():
     locDataDict = trailerdata.run()
     print(locDataDict)
@@ -277,90 +364,21 @@ def updateLocation(trailerNum, datalist):
     trailerLocation.save()
 
 
+# Used by Trailer Model
 def createFirstTrailerLoc(trailerId):
     trailer = Trailer.objects.get(id=trailerId)
     trailerLocation = TrailerLocation(trailer=trailer)
     trailerLocation.save()
 
 
+# Used by Trailer Model
 def createFirstTrailerTrip(trailerId):
     trailer = Trailer.objects.get(id=trailerId)
     trailerTrip = TrailerTrip(trailer=trailer)
     trailerTrip.save()
 
 
-def calcRate(shipmentId):
-    shipment = Shipment.objects.get(id=shipmentId)
-    shipment.rateTotal = shipment.rateLineHaul + shipment.rateFSC + shipment.rateExtras
-    if shipment.customCarrierRate is False:
-        if checkRate(shipment.destinationState) is False:
-            shipment.rateTotalCarrier = ((shipment.rateLineHaul * Decimal(
-                0.8)) + shipment.rateFSC + shipment.rateExtras) - Decimal(250)
-        else:
-            rateList = checkRate(shipment.destinationState)
-            miles = shipment.rateLineHaul / Decimal(rateList[1])
-            linehaul = Decimal(miles) * Decimal(rateList[2])
-            shipment.rateTotalCarrier = ((linehaul * Decimal(0.8)) + shipment.rateFSC + shipment.rateExtras) - Decimal(
-                250)
-    shipment.save()
-
-
-def calcShipmentMargin(shipmentId):
-    shipment = Shipment.objects.get(id=shipmentId)
-    shipment.shipmentMargin = shipment.rateTotal - shipment.rateTotalCarrier
-    shipment.shipmentMarginPercentage = (shipment.shipmentMargin / shipment.rateTotal) * 100
-    shipment.save()
-
-
-def updateTrailerTrip(shipmentId, trailer):
-    shipment = Shipment.objects.get(id=shipmentId)
-    trailerTrip = TrailerTrip.objects.get(trailer=trailer)
-    trailerTrip.shipment = shipment
-    trailerTrip.save()
-
-
-def resetTrailerTrip(tripId):
-    trailerTrip = TrailerTrip.objects.get(id=tripId)
-    trailerTrip.dateYardEmpty = trailerTrip.dateCarrierReturnedEmpty
-    trailerTrip.shipment = None
-    trailerTrip.dateDrayPickedUp = None
-    trailerTrip.dateDrayReturnedLoaded = None
-    trailerTrip.dateCarrierPickedUpLoaded = None
-    trailerTrip.dateCarrierDelivered = None
-    trailerTrip.dateCarrierReturnedEmpty = None
-    trailerTrip.save()
-
-
-def createTripReport(tripId, shipmentId, trailerId):
-    trailerTrip = TrailerTrip.objects.get(id=tripId)
-    shipment = Shipment.objects.get(id=shipmentId)
-    trailer = Trailer.objects.get(id=trailerId)
-    daysYardEmpToDrayPu = trailerTrip.dateDrayPickedUp - trailerTrip.dateYardEmpty
-    daysDrayPuToYardLoad = trailerTrip.dateDrayReturnedLoaded - trailerTrip.dateDrayPickedUp
-    daysYardLoadToCarrPu = trailerTrip.dateCarrierPickedUpLoaded - trailerTrip.dateDrayReturnedLoaded
-    daysCarrPuToDeliv = trailerTrip.dateCarrierDelivered - trailerTrip.dateCarrierPickedUpLoaded
-    daysDelivToRetEmp = trailerTrip.dateCarrierReturnedEmpty - trailerTrip.dateCarrierDelivered
-
-    trailerDaysOwed = calcTrailerDaysOwed(daysCarrPuToDeliv.days + daysDelivToRetEmp.days)
-    totalDays = calcTotalDays(daysYardEmpToDrayPu, daysDrayPuToYardLoad, daysYardLoadToCarrPu,
-                              daysCarrPuToDeliv, daysDelivToRetEmp)
-    startDate = trailerTrip.dateYardEmpty
-    endDate = trailerTrip.dateCarrierReturnedEmpty
-    totalTrailerCost = Decimal(totalDays * getTrailerCost(trailer.trailerNumber))
-    grossMargin = shipment.shipmentMargin
-    netMargin = grossMargin - totalTrailerCost
-    netMarginAfterTrailer = netMargin + (trailerDaysOwed * 30)
-    tripReport = TripReport(trailer=trailer, shipment=shipment, daysYardEmpToDrayPu=daysYardEmpToDrayPu.days,
-                            daysDrayPuToYardLoad=daysDrayPuToYardLoad.days,
-                            daysYardLoadToCarrPu=daysYardLoadToCarrPu.days,
-                            daysCarrPuToDeliv=daysCarrPuToDeliv.days, daysDelivToRetEmp=daysDelivToRetEmp.days,
-                            trailerDaysOwed=trailerDaysOwed, totalDays=totalDays, startDate=startDate,
-                            endDate=endDate, totalTrailerCost=totalTrailerCost, grossMargin=grossMargin,
-                            netMargin=netMargin, netMarginAfterTrailer=netMarginAfterTrailer)
-    tripReport.save()
-    resetTrailerTrip(tripId)
-
-
+# Helper for createTripReport
 def calcTrailerDaysOwed(days):
     if days < 8:
         return 0
@@ -368,10 +386,12 @@ def calcTrailerDaysOwed(days):
         return days - 7
 
 
+# Helper for createTripReport
 def calcTotalDays(days1, days2, days3, days4, days5):
     return days1.days + days2.days + days3.days + days4.days + days5.days
 
 
+# Helper for updateTrailerLocations
 def getStatusCodes():
     trailerTrips = TrailerTrip.objects.all().values(
         'trailer__trailerNumber',
@@ -387,6 +407,7 @@ def getStatusCodes():
         updateStatusCode(trailerNum, trailerTrips[i])
 
 
+# Helper for updateTrailerLocations
 def updateStatusCode(trailerNum, dataDict):
     trailerLocation = TrailerLocation.objects.get(trailer__trailerNumber=trailerNum)
     if dataDict['dateDrayPickedUp'] is None:
@@ -404,48 +425,186 @@ def updateStatusCode(trailerNum, dataDict):
     trailerLocation.save()
 
 
+# Helper function to update the trailer locations
 def updateTrailerLocations():
     getLocations()
     getStatusCodes()
 
 
-def createCsv():
-    locDataList = getLocDataList()
-    fields = getLocDataFields()
-    filename = 'trailer_locations.csv'
-    with open(filename, 'w', newline='') as csvfile:
-        csvwriter = csv.writer(csvfile)
-        csvwriter.writerow(fields)
-        csvwriter.writerows(locDataList)
+# def createCsv():
+#     locDataList = getLocDataList()
+#     fields = getLocDataFields()
+#     filename = 'trailer_locations.csv'
+#     with open(filename, 'w', newline='') as csvfile:
+#         csvwriter = csv.writer(csvfile)
+#         csvwriter.writerow(fields)
+#         csvwriter.writerows(locDataList)
 
 
-# Various Queries To Go Below
+#####################################################
+# Implementing New Functions to handle e-mails here #
+#####################################################
+def trailerLocEmail(trailerList):
+    if 'ALL' in trailerList:
+        locationData = trailerLocEmailQuery()
+        locationList = list(locationData)
+        dataList = formatLocData(locationList)
+    else:
+        locationData = trailerLocEmailNotAll(trailerList)
+        locationList = list(locationData)
+        dataList = formatLocData(locationList)
+    return trailerLocTable(dataList)
+
+
+def formatLocData(locationList):
+    properList = []
+    for i in range(len(locationList)):
+        location = locationList[i]['trailer__trailerlocation__locationCity'] + "," + \
+                   locationList[i]['trailer__trailerlocation__locationState'] + " " + \
+                   locationList[i]['trailer__trailerlocation__locationCountry']
+
+        destination = str(locationList[i]['shipment__destinationCity']) + "," + \
+                      str(locationList[i]['shipment__destinationState'])
+
+        dataList = [
+            locationList[i]['trailer__trailerNumber'],
+            location,
+            locationList[i]['trailer__trailerlocation__statusCode'],
+            locationList[i]['shipment__loadNumber'],
+            destination,
+            locationList[i]['shipment__carrier']
+        ]
+        properList.append(dataList)
+    return properList
+
+
+def trailerLocTable(dataList):
+    fields = trailerLocFields()
+    table = PrettyTable(fields)
+    for i in range(len(dataList)):
+        table.add_row(dataList[i])
+    htmlTable = table.get_html_string(format=True)
+    return htmlTable
+
+
+def trailerLocFields():
+    fields = ['Trailer #', 'Location', 'Status', 'Load #', 'Destination', 'Carrier']
+    return fields
+
+
+def shipmentTransitEmail(shipmentList):
+    if 'ALL' in shipmentList:
+        shipmentData = shipmentTransitQuery()
+        shipmentList = list(shipmentData)
+        dataList = formatShipmentTransData(shipmentList)
+    else:
+        shipmentData = shipmentTransitQueryNotAll(shipmentList)
+        shipmentList = list(shipmentData)
+        dataList = formatShipmentTransData(shipmentList)
+    return shipmentTransTable(dataList)
+
+
+def formatShipmentTransData(shipmentList):
+    properList = []
+    for i in range(len(shipmentList)):
+        shipmentDest = shipmentList[i]['destinationCity'] + ', ' + shipmentList[i]['destinationState']
+        trailerLoc = shipmentList[i]['trailer__trailerlocation__locationCity'] + ', ' + \
+                     shipmentList[i]['trailer__trailerlocation__locationState']
+        dataList = [
+            shipmentList[i]['loadNumber'],
+            shipmentDest,
+            shipmentList[i]['trailer__trailerNumber'],
+            trailerLoc
+        ]
+        properList.append(dataList)
+    return properList
+
+
+def shipmentTransTable(dataList):
+    fields = shipmentTransFields()
+    table = PrettyTable(fields)
+    for i in range(len(dataList)):
+        table.add_row(dataList[i])
+    htmlTable = table.get_html_string(format=True)
+    return htmlTable
+
+
+def shipmentTransFields():
+    fields = ['Load #', 'Destination', 'Trailer #', 'Trailer Location']
+    return fields
+
+
+def trailerDrayEmail(trailerList):
+    if 'ALL' in trailerList:
+        trailerData = trailerDrayQuery()
+        drayTrailerList = list(trailerData)
+    else:
+        trailerData = trailerDrayNotAllQuery(trailerList)
+        drayTrailerList = list(trailerData)
+    numTrailers = str(len(drayTrailerList))
+    message = "Hello, \n \n We have " + numTrailers + " Trailers Available for pickup. \n \n"
+    for i in range(len(drayTrailerList)):
+        trailerNum = drayTrailerList[i]['trailer__trailerNumber']
+        trailerPlateNum = drayTrailerList[i]['trailer__trailerPlateNumber']
+        trailerPlateState = drayTrailerList[i]['trailer__trailerPlateState']
+        trailerString = str(trailerNum) + " " + str(trailerPlateNum) + " " + str(trailerPlateState) + "\n"
+        message = message + trailerString
+    return message
+
+
+###################
+# Query Functions #
+###################
 def trailerLocQuery():
-    # trailers = Trailer.objects.all().values(
-    #     'trailerNumber',
-    #     'id',
-    #     'trailerlocation__locationCity',
-    #     'trailerlocation__locationState',
-    #     'trailerlocation__locationCountry',
-    #     'trailerlocation__statusCode',
-    #     'trailertrip__shipment__loadNumber',
-    #     'trailertrip__shipment__destinationCity',
-    #     'trailertrip__shipment__destinationState',
-    #     'trailerlocation__updated_at',
-    #     'trailertrip__shipment__carrier',
-    #     'shipment__id'
-    # ).order_by('-trailerlocation__statusCode')
-
-    trailers = TrailerLocation.objects.values(
+    # TODO This Fixes Trailer Location Issues I was experiencing
+    trailers = TrailerTrip.objects.all().values(
         'trailer__trailerNumber',
         'trailer__id',
-        'locationCity',
-        'locationState',
-        'locationCountry',
-        'statusCode',
-        'updated_at'
-    ).order_by('-trailer__trailerNumber')
+        'trailer__trailerlocation__locationCity',
+        'trailer__trailerlocation__locationState',
+        'trailer__trailerlocation__locationCountry',
+        'trailer__trailerlocation__statusCode',
+        'trailer__trailerlocation__updated_at',
+        'shipment__loadNumber',
+        'shipment__destinationCity',
+        'shipment__destinationState',
+        'shipment__carrier',
+        'shipment__id',
+        'shipment__driverName',
+        'shipment__driverCell'
+    ).order_by('-trailer__trailerlocation__statusCode')
     return trailers
+
+
+def trailerLocEmailQuery():
+    trailers = TrailerTrip.objects.all().values(
+        'trailer__trailerNumber',
+        'trailer__id',
+        'trailer__trailerlocation__locationCity',
+        'trailer__trailerlocation__locationState',
+        'trailer__trailerlocation__locationCountry',
+        'trailer__trailerlocation__statusCode',
+        'shipment__loadNumber',
+        'shipment__destinationCity',
+        'shipment__destinationState',
+        'shipment__carrier'
+    ).order_by('-trailer__trailerlocation__statusCode')
+    return trailers
+
+
+def trailerLocEmailNotAll(trailerList):
+    trailer = TrailerTrip.objects.filter(trailer__id__in=trailerList).values(
+        'trailer__trailerNumber',
+        'trailer__trailerlocation__locationCity',
+        'trailer__trailerlocation__locationState',
+        'trailer__trailerlocation__locationCountry',
+        'trailer__trailerlocation__statusCode',
+        'shipment__loadNumber',
+        'shipment__destinationCity',
+        'shipment__destinationState',
+        'shipment__carrier'
+    )
+    return trailer
 
 
 def tripReportQuery():
@@ -563,3 +722,127 @@ def shipmentTransitQuery():
         'trailer__trailerlocation__locationState'
     )
     return shipments
+
+
+def shipmentTransitQueryNotAll(shipmentList):
+    shipments = Shipment.objects.filter(id__in=shipmentList, loadDelivered=False).order_by('-dateTendered').values(
+        'dateTendered',
+        'loadNumber',
+        'masterBolNumber',
+        'carrier',
+        'destinationCity',
+        'destinationState',
+        'rateTotal',
+        'id',
+        'trailer',
+        'loadDelivered',
+        'trailer__id',
+        'rateTotalCarrier',
+        'driverName',
+        'shipmentMargin',
+        'shipmentMarginPercentage',
+        'trailer__trailerNumber',
+        'trailer__trailertrip__shipment__id',
+        'deliveryDate',
+        'deliveryTime',
+        'trailer__trailerlocation__locationCity',
+        'trailertrip__dateYardEmpty',
+        'trailertrip__dateDrayPickedUp',
+        'trailertrip__dateDrayReturnedLoaded',
+        'trailertrip__dateCarrierPickedUpLoaded',
+        'trailertrip__dateCarrierDelivered',
+        'trailertrip__dateCarrierReturnedEmpty',
+        'trailer__trailerlocation__locationState'
+    )
+    return shipments
+
+
+def trailerDrayQuery():
+    trailers = TrailerLocation.objects.filter(statusCode='In Yard Empty Awaiting Dray Pickup').values(
+        'trailer__trailerNumber',
+        'trailer__trailerPlateNumber',
+        'trailer__trailerPlateState'
+    )
+    return trailers
+
+
+def trailerDrayNotAllQuery(trailerList):
+    trailers = TrailerLocation.objects.filter(trailer__id__in=trailerList,
+                                              statusCode='In Yard Empty Awaiting Dray Pickup').values(
+        'trailer__trailerNumber',
+        'trailer__trailerPlateNumber',
+        'trailer__trailerPlateState'
+    )
+    return trailers
+
+
+def rheemChargeQuery():
+    rheemCharges = RheemCharge.objects.values(
+        'trailer__trailerNumber',
+        'shipment__loadNumber',
+        'startDate',
+        'endDate',
+        'chargeType',
+        'amountOwed',
+        'paid'
+    )
+    return rheemCharges
+
+
+def carrierChargeQuery():
+    carrierCharges = CarrierCharge.objects.values(
+        'paid',
+        'dateOccurred',
+        'tripReport__trailer__trailerNumber',
+        'shipment__loadNumber',
+        'shipment__carrier',
+        'shipment__driverName',
+        'daysOwed',
+        'amountOwed'
+    )
+    return carrierCharges
+
+
+########################################
+# Functions Below Used for Email Forms #
+########################################
+def getLocChoices():
+    locChoices = [
+        ('ALL', 'All')
+    ]
+    locationData = trailerLocQuery()
+    locationList = list(locationData)
+    for i in range(len(locationList)):
+        trailerTuple = (locationList[i]['trailer__id'], locationList[i]['trailer__trailerNumber'])
+        locChoices.append(trailerTuple)
+    return locChoices
+
+
+def getStChoices():
+    stChoices = [
+        ('ALL', 'All')
+    ]
+    shipmentData = shipmentTransitQuery()
+    shipmentList = list(shipmentData)
+    for i in range(len(shipmentList)):
+        shipmentId = shipmentList[i]['id']
+        shipmentLoadNum = shipmentList[i]['loadNumber']
+        shipmentDestCity = shipmentList[i]['destinationCity']
+        shipmentDestState = shipmentList[i]['destinationState']
+        shipmentString = str(shipmentLoadNum) + " " + str(shipmentDestCity) + ", " + str(shipmentDestState)
+        shipmentTuple = (shipmentId, shipmentString)
+        stChoices.append(shipmentTuple)
+    return stChoices
+
+
+def getDpuChoices():
+    dpuChoices = [
+        ('ALL', 'All')
+    ]
+    locationData = trailerLocQuery()
+    locationList = list(locationData)
+    for i in range(len(locationList)):
+        if locationList[i]['trailer__trailerlocation__statusCode'] == 'In Yard Empty Awaiting Dray Pickup':
+            trailerTuple = (locationList[i]['trailer__id'], locationList[i]['trailer__trailerNumber'])
+            dpuChoices.append(trailerTuple)
+    return dpuChoices

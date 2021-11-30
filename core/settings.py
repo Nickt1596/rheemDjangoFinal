@@ -99,7 +99,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'EST'
 
 USE_I18N = True
 
@@ -108,6 +108,15 @@ USE_L10N = True
 USE_TZ = True
 
 #############################################################
+
+# Email setup
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_USE_SSL = True
+EMAIL_PORT = 465
+EMAIL_HOST_USER = 'RheemTrailerUpdates@gmail.com '
+EMAIL_HOST_PASSWORD = 'Smiley43!'
+
 # SRC: https://devcenter.heroku.com/articles/django-assets
 
 # Static files (CSS, JavaScript, Images)

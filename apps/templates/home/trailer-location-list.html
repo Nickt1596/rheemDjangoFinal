@@ -55,16 +55,13 @@
 							  </div>
 								</td>
 								<td class="text-center">{{ trailer.trailer__trailerNumber}}</td>
-								<td class="text-left">{{ trailer.locationCity }}, {{ trailer.locationState }} {{ trailer.locationCountry }}</td>
-								<td class="text-left">{{ trailer.statusCode }}</td>
-{#								<td class="text-center">{{ trailer.trailertrip__shipment__loadNumber}}</td>#}
-{#								<td class="text-center">{{ trailer.trailertrip__shipment__destinationCity }}, {{ trailer.trailertrip__shipment__destinationState }}</td>#}
-{#								<td class="text-center">{{ trailer.trailertrip__shipment__carrier }}</td>#}
-								<td class="text-center">Holder</td>
-								<td class="text-center">Holder</td>
-								<td class="text-center">Holder</td>
-								<td class="text-center">Holder</td>
-								<td class="text-center">Holder</td>
+								<td class="text-left">{{ trailer.trailer__trailerlocation__locationCity }}, {{ trailer.trailer__trailerlocation__locationState }} {{ trailer.trailer__trailerlocation__locationCountry }}</td>
+								<td class="text-left">{{ trailer.trailer__trailerlocation__statusCode }}</td>
+								<td class="text-center">{{ trailer.shipment__loadNumber}}</td>
+								<td class="text-center">{{ trailer.shipment__destinationCity }}, {{ trailer.shipment__destinationState }}</td>
+								<td class="text-center">{{ trailer.shipment__carrier }}</td>
+								<td class="text-center">{{ trailer.shipment__driverName }}</td>
+								<td class="text-center">{{ trailer.shipment__driverCell }}</td>
 							</tr>
 							{% endfor %}
               <tr>

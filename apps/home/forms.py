@@ -1,4 +1,4 @@
-from django.forms import ModelForm, Select
+from django.forms import *
 from django import forms
 from .models import *
 
@@ -159,3 +159,37 @@ class TrailerTripForm(ModelForm):
 
         for name, field in self.fields.items():
             field.widget.attrs.update({'class': 'form-control'})
+
+
+class EmailForm(forms.Form):
+    emailChoices = [
+        ('LOC', 'Location Updates'),
+        ('ST', 'Shipments and Current Location'),
+        ('DPU', 'Trailers available for pickup')
+    ]
+    # If Location Updates, then another field is generated with a dropdown to select which Trailers you want
+    # Updates for. All is selected by default, if something besides All is selected, unselect All.
+
+    # If Shipments and Current Locations, a field is generated with a dropdown of all Shipments where
+    # Load Delivered is False. Default selection is All, if something besides All is selected, unselect All.
+
+    # Repeat above for Trailer Available for Pickup
+    locChoices = getLocChoices()
+    stChoices = getStChoices()
+    dpuChoices = getDpuChoices()
+
+    emailType = ChoiceField(choices=emailChoices)
+    # Location Updates Select menu Logic
+    # If all, we just use the getEmailTable function we currently have
+    # If not, we take the list with this choices, iterate over that list and get the data for each trailer in that
+    # list, and then create a table and send.
+    locSelect = MultipleChoiceField(choices=locChoices)
+    stSelect = MultipleChoiceField(choices=stChoices)
+    dpuSelect = MultipleChoiceField(choices=dpuChoices)
+    recipient = EmailField(required=True)
+
+    widgets = {'emailChoices': Select}
+
+
+
+

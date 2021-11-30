@@ -34,4 +34,9 @@ urlpatterns = [
 
     path('add-trailer-modal/', views.addTrailer, name="addTrailer"),
 
+    path('email-form/', views.emailForm, name="emailForm"),
+    path('carrier-charges/', views.carrierCharges, name="carrierCharges"),
+    path('rheem-charges/', views.rheemCharges, name="rheemCharges")
+
+
 ]

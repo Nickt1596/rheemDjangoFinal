@@ -1,0 +1,33 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Tables Extended {% endblock title %}
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+<div class="card">
+  <div class="card-body">
+    <form method="POST">
+	    {% csrf_token %}
+	    {{ form }}
+	          <div class="card-footer">
+        <button type="submit" class="btn btn-fill btn-primary">Submit</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script type="text/javascript">
+  document.getElementById('id_emailType').hide();
+</script>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE -->
+{% block javascripts %}
+	<script type="text/javascript">
+    document.getElementById('id_emailType').hide();
+	</script>
+
+{% endblock javascripts %}

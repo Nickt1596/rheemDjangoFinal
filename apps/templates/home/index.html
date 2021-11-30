@@ -7,159 +7,221 @@
 
 {% block content %}
 
-    <div class="row">
-{#      <div class="col-lg-12">#}
-{#			<div class="card">#}
-{#				<div class="card-header">#}
-{#					<h4 class="text-center"><a href="{% url 'trailers' %}" class="text-center">Trailer List</a></h4>#}
-{#				</div>#}
-{#				<div class="card-body">#}
-{#					<div class="table-responsive">#}
-{#						<table class="table table-striped">#}
-{#							<thead class="text-primary">#}
-{#							<tr>#}
-{#								<th class="text-center">Trailer #</th>#}
-{#								<th class="text-center">Plate #</th>#}
-{#								<th class="text-center">Plate State</th>#}
-{#								<th class="text-center">Lease Company</th>#}
-{#								<th class="text-center">Location City</th>#}
-{#								<th class="text-center">Location State</th>#}
-{#								<th class="text-center">Location Country</th>#}
-{#								<th class="text-center">Status</th>#}
-{#								<th class="">Actions</th>#}
-{#							</tr>#}
-{#							</thead>#}
-{#							<tbody>#}
-{#							{% for trailer in trailers %}#}
-{#							<tr>#}
-{#								<td class="text-center">{{ trailer.trailer__trailerNumber}}</td>#}
-{#								<td class="text-center">{{ trailer.trailer__trailerPlateNumber }}</td>#}
-{#								<td class="text-center">{{ trailer.trailer__trailerPlateState }}</td>#}
-{#								<td class="text-center">{{ trailer.trailer__trailerLeaseCompany }}</td>#}
-{#								<td class="text-center">{{ trailer.locationCity }}</td>#}
-{#								<td class="text-center">{{ trailer.locationState }}</td>#}
-{#								<td class="text-center">{{ trailer.locationCountry }}</td>#}
-{#								<td class="text-center">{{ trailer.statusCode }}</td>#}
-{#		            <td class="td-actions">#}
-{#		                <a href="{% url 'updateTrailer' trailer.trailer__id %}" class="btn btn-primary">Edit</a>#}
-{#		                <a href="{% url 'deleteTrailer' trailer.trailer__id %}" class="btn btn-danger">Delete</a>#}
-{#		            </td>#}
-{#							</tr>#}
-{#							{% endfor %}#}
-{#							</tbody>#}
-{#						</table>#}
-{#					</div>#}
-{#				</div>#}
-{#			</div>#}
-{#      </div>#}
-      <div class="col-lg-12">
-        <div class="card">
-          <div class="card-header">
-            <h4 class="card-title">Global Sales by Top Locations</h4>
-            <p class="card-category">All products that were shipped</p>
-          </div>
-          <div class="card-body">
-            <div class="row">
-              <div class="col-md-6">
-                <div class="table-responsive">
-                  <table class="table">
-                    <tbody>
-                      <tr>
-                        <td>
-                          <div class="flag">
-                            <img src="/static/assets/img/US.png" alt="flag">
-                          </div>
-                        </td>
-                        <td>USA</td>
-                        <td class="text-right">
-                          2.920
-                        </td>
-                        <td class="text-right">
-                          53.23%
-                        </td>
-                      </tr>
-                      <tr>
-                        <td>
-                          <div class="flag">
-                            <img src="/static/assets/img/DE.png" alt="flag">
-                          </div>
-                        </td>
-                        <td>Germany</td>
-                        <td class="text-right">
-                          1.300
-                        </td>
-                        <td class="text-right">
-                          20.43%
-                        </td>
-                      </tr>
-                      <tr>
-                        <td>
-                          <div class="flag">
-                            <img src="/static/assets/img/AU.png" alt="flag">
-                          </div>
-                        </td>
-                        <td>Australia</td>
-                        <td class="text-right">
-                          760
-                        </td>
-                        <td class="text-right">
-                          10.35%
-                        </td>
-                      </tr>
-                      <tr>
-                        <td>
-                          <div class="flag">
-                            <img src="/static/assets/img/GB.png" alt="flag">
-                          </div>
-                        </td>
-                        <td>United Kingdom</td>
-                        <td class="text-right">
-                          690
-                        </td>
-                        <td class="text-right">
-                          7.87%
-                        </td>
-                      </tr>
-                      <tr>
-                        <td>
-                          <div class="flag">
-                            <img src="/static/assets/img/RO.png" alt="flag">
-                          </div>
-                        </td>
-                        <td>Romania</td>
-                        <td class="text-right">
-                          600
-                        </td>
-                        <td class="text-right">
-                          5.94%
-                        </td>
-                      </tr>
-                      <tr>
-                        <td>
-                          <div class="flag">
-                            <img src="/static/assets/img/BR.png" alt="flag">
-                          </div>
-                        </td>
-                        <td>Brasil</td>
-                        <td class="text-right">
-                          550
-                        </td>
-                        <td class="text-right">
-                          4.34%
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-              <div class="col-md-6 ml-auto mr-auto">
-                <div id="worldMap" style="height: 300px;"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+<div class="row">
+	<div class="col-md-12">
+		<div class="card">
+
+			<div class="card-header">
+				<a href="{% url 'trailerLocations' %}">
+					<h4 class="text-center">Trailer Locations</h4>
+				</a>
+			</div>
+
+			<div class="card-body">
+				<div class="table-responsive">
+					<table class="table table-striped">
+						<thead class="text-primary">
+							<tr>
+								<th class="text-left">Trailer #</th>
+								<th class="text-left">Location</th>
+								<th class="text-left">Status</th>
+								<th class="text-left">Load Number</th>
+								<th class="text-left">Destination</th>
+								<th class="text-left">Carrier</th>
+								<th class="text-left">Driver Name</th>
+								<th class="text-left">Driver Cell</th>
+							</tr>
+						</thead>
+
+						<tbody>
+							{% for trailer in trailers %}
+							<tr>
+								<td class="text-left">{{ trailer.trailer__trailerNumber}}</td>
+								<td class="text-left">{{ trailer.trailer__trailerlocation__locationCity }}, {{ trailer.trailer__trailerlocation__locationState }} {{ trailer.trailer__trailerlocation__locationCountry }}</td>
+								<td class="text-left">{{ trailer.trailer__trailerlocation__statusCode }}</td>
+								<td class="text-left">{{ trailer.shipment__loadNumber}}</td>
+								<td class="text-left">{{ trailer.shipment__destinationCity }}, {{ trailer.shipment__destinationState }}</td>
+								<td class="text-left">{{ trailer.shipment__carrier }}</td>
+								<td class="text-left">{{ trailer.shipment__driverName }}</td>
+								<td class="text-left">{{ trailer.shipment__driverCell }}</td>
+							</tr>
+							{% endfor %}
+						</tbody>
+
+					</table>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="col-md-6">
+		<div class="card">
+
+			<div class="card-header">
+				<a href="{% url 'rheemCharges' %}">
+					<h4 class="text-center">Rheem Charges</h4>
+				</a>
+			</div>
+
+			<div class="card-body">
+				<div class="table-responsive">
+					<table class="table table-striped">
+						<thead class="text-primary">
+							<tr>
+								<th class="text-left">Status</th>
+								<th class="text-left">Trailer #</th>
+								<th class="text-left">Shipment #</th>
+								<th class="text-left">Start Date</th>
+								<th class="text-left">End Date</th>
+								<th class="text-left">Charge Type</th>
+								<th class="text-left">Amount Owed</th>
+							</tr>
+						</thead>
+
+						<tbody>
+							{% for charge in rheemcharges %}
+							<tr>
+								{% if charge.paid is True %}
+								<td class="text-left">Paid</td>
+								{% else %}
+								<td class="text-left">Owed</td>
+								{% endif %}
+								<td class="text-left">{{ charge.trailer__trailerNumber }}</td>
+								<td class="text-left">{{ charge.shipment__loadNumber }}</td>
+								<td class="text-left">{{ charge.startDate }}</td>
+								<td class="text-left">{{ charge.endDate }}</td>
+								<td class="text-left">{{ charge.chargeType }}</td>
+								<td class="text-left">${{ charge.amountOwed}}</td>
+							</tr>
+							{% endfor %}
+						</tbody>
+
+					</table>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="col-md-6">
+		<div class="card">
+
+			<div class="card-header">
+				<a href="{% url 'carrierCharges' %}">
+					<h4 class="text-center">Carrier Charges</h4>
+				</a>
+			</div>
+
+			<div class="card-body">
+				<div class="table-responsive">
+					<table class="table table-striped">
+						<thead class="text-primary">
+							<tr>
+								<th class="text-left">Status</th>
+								<th class="text-left">Date Occurred</th>
+								<th class="text-left">Trailer #</th>
+								<th class="text-left">Shipment #</th>
+								<th class="text-left">Carrier</th>
+								<th class="text-left">Driver</th>
+								<th class="text-left">Days Owed</th>
+								<th class="text-left">Amount Owed</th>
+							</tr>
+						</thead>
+
+						<tbody>
+							{% for charge in carriercharges %}
+							<tr>
+								{% if charge.paid is True %}
+								<td class="text-left">Paid</td>
+								{% else %}
+								<td class="text-left">Owed</td>
+								{% endif %}
+								<td class="text-left">{{ charge.dateOccurred }}</td>
+								<td class="text-left">{{ charge.tripReport__trailer__trailerNumber }}</td>
+								<td class="text-left">{{ charge.shipment__loadNumber }}</td>
+								<td class="text-left">{{ charge.shipment__carrier }}</td>
+								<td class="text-left">{{ charge.shipment__driverName}}</td>
+								<td class="text-left">{{ charge.daysOwed }}</td>
+								<td class="text-left">${{ charge.amountOwed }}</td>
+							</tr>
+							{% endfor %}
+						</tbody>
+
+					</table>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="col-md-12">
+		<div class="card">
+
+			<div class="card-header">
+				<a href="{% url 'shipments' %}">
+					<h4 class="text-center">Shipments</h4>
+				</a>
+			</div>
+
+			<div class="card-body">
+				<div class="table-responsive">
+					<table class="table table-striped">
+						<thead class="text-primary">
+							<tr>
+								<th class="text-left">Date Tendered</th>
+								<th class="text-left">Load Number</th>
+								<th class="text-left">Master BOL</th>
+								<th class="text-left">Carrier</th>
+								<th class="text-left">Destination</th>
+								<th class="text-left">Rate Total</th>
+								<th class="text-left">Carrier Rate</th>
+								<th class="text-left">Gross Margin</th>
+								<th class="text-left">Margin %</th>
+								<th class="text-left">Trailer</th>
+								<th class="text-left">Trailer Loc</th>
+								<th class="text-left">Delivery </th>
+							</tr>
+						</thead>
+
+						<tbody>
+							{% for shipment in shipments %}
+							<tr>
+								<td class="text-left">{{ shipment.dateTendered}}</td>
+								<td class="text-left">{{ shipment.loadNumber }}</td>
+								<td class="text-left">{{ shipment.masterBolNumber}}</td>
+								<td class="text-left">{{ shipment.carrier }}</td>
+								<td class="text-left">{{ shipment.destinationCity }}, {{ shipment.destinationState }}</td>
+								<td class="text-left">${{ shipment.rateTotal }}</td>
+								<td class="text-left">${{ shipment.rateTotalCarrier}}</td>
+								<td class="text-left">${{ shipment.shipmentMargin}}</td>
+								<td class="text-left">{{ shipment.shipmentMarginPercentage}}%</td>
+
+								{% if shipment.trailer__trailerNumber != none %}
+								<td class="text-left">{{ shipment.trailer__trailerNumber}}</td>
+								{% else %}
+								<td class="text-left"></td>
+								{% endif %}
+
+								{% if shipment.trailer__trailertrip__shipment__id == shipment.id %}
+								<td class="text-left">{{ shipment.trailer__trailerlocation__locationCity }},
+								{{ shipment.trailer__trailerlocation__locationState }}</td>
+								{% else %}
+								<td class="text-left"></td>
+								{% endif %}
+
+								{% if shipment.deliveryDate != none %}
+								<td class="text-left">{{ shipment.deliveryDate }},
+								{{ shipment.deliveryTime }} </td>
+								{% else %}
+								<td class="text-left"></td>
+								{% endif %}
+
+							</tr>
+							{% endfor %}
+						</tbody>
+
+					</table>
+				</div>
+			</div>
+		</div>
+	</div>
+
+</div>
 
 {% endblock content %}
 
