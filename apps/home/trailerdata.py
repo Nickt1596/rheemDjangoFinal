@@ -224,7 +224,7 @@ def xtraleaseParse(text, trailerDict):
 def run():
     trailerDict = TrailerDict()
     start = time.time()
-    with ThreadPoolExecutor(max_workers=2) as executor:
+    with ThreadPoolExecutor(max_workers=1) as executor:
         executor.submit(skybitztesting, trailerDict, driver=get_driver())
         executor.submit(skybitztesting2, trailerDict, driver=get_driver())
         executor.submit(xtralease, trailerDict, driver=get_driver())
