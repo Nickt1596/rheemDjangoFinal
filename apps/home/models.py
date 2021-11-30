@@ -822,7 +822,7 @@ def rheemChargeQuery():
         'chargeType',
         'amountOwed',
         'paid'
-    )
+    ).order_by('-dateOccurred')
     return rheemCharges
 
 
@@ -836,7 +836,7 @@ def carrierChargeQuery():
         'shipment__driverName',
         'daysOwed',
         'amountOwed'
-    )
+    ).order_by('-dateOccurred')
     return carrierCharges
 
 
