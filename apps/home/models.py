@@ -53,6 +53,43 @@ class TrailerLocation(models.Model):
     def __str__(self):
         return self.trailer.trailerNumber
 
+    def save(self, *args, **kwargs):
+        yard_cords = (27.650904, -99.623088)
+        created = self._state.adding is True
+        if created:
+            super().save(*args, **kwargs)
+        else:
+            oldLocation = TrailerLocation.objects.get(id=self.id)
+            if oldLocation.statusCode == "In Yard Empty Awaiting Dray Pickup":
+                if oldLocation.locationCountry == 'US' and self.locationCountry == 'MX':
+                    trailerTrip = TrailerTrip.objects.get(trailer=self.trailer)
+                    trailerTrip.dateDrayPickedUp = date.today()
+                    trailerTrip.save()
+                    self.statusCode = "Currently Being Loaded in Mexico"
+            if oldLocation.statusCode == "Currently Being Loaded in Mexico":
+                if oldLocation.locationCountry == 'MX' and self.locationCountry == 'US':
+                    trailerTrip = TrailerTrip.objects.get(trailer=self.trailer)
+                    trailerTrip.dateDrayReturnedLoaded = date.today()
+                    trailerTrip.save()
+                    self.statusCode = "In Yard Loaded Awaiting Carrier Pickup"
+            if oldLocation.statusCode == "In Yard Loaded Awaiting Carrier Pickup":
+                current_cords = (self.latitude, self.longitude)
+                distanceBetween = distance.distance(yard_cords, current_cords).miles
+                if distanceBetween > 1.0:
+                    trailerTrip = TrailerTrip.objects.get(trailer=self.trailer)
+                    trailerTrip.dateCarrierPickedUpLoaded = date.today()
+                    trailerTrip.save()
+                    self.statusCode = "In Transit to receiver"
+            if oldLocation.statusCode == "In Transit back to Yard":
+                current_cords = (self.latitude, self.longitude)
+                distanceBetween = distance.distance(yard_cords, current_cords).miles
+                if distanceBetween < 1.0:
+                    trailerTrip = TrailerTrip.objects.get(trailer=self.trailer)
+                    trailerTrip.dateCarrierReturnedEmpty = date.today()
+                    trailerTrip.save()
+                    self.statusCode = "In Yard Empty Awaiting Dray Pickup"
+        super().save(*args, **kwargs)
+
 
 class Shipment(models.Model):
     CARRIER_CHOICES = [

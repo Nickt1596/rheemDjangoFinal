@@ -480,3 +480,26 @@ Rheem
 
 Other To do list as of 11/26
 1. Fix Email Form and Dynamically Create the Form
+
+Big to do list as of 11/29
+
+Trailer Location automatically update every hour now, so we can use some logic to update status codes automatically.
+
+1. If Status Code is 'In Yard Empty Awaiting Dray Pickup'
+    If old country is US and new country is MX we do the following
+        - Set current date to Date Dray PU
+        - Update status code to in mexico being loaded.
+2. If Status code is 'In Mexico being loaded'
+    If old country is MX and new Country is US we do the following
+        - Set current date to Date Dray Returned Loaded
+        - Update status code to in yard loaded awaiting carrier pickup
+3. If status Code is 'In yard awaiting carrier pickup'
+    If old location is in the yard, and new location is not in the yard we do the following
+        - Set current date to Date Carrier PU Loaded
+        - Update Status code to 'In transit to receiver'
+4. If status code is 'On way back to yard'
+    If old location is not in the yard, and new location is in the yard we do the following
+        - Set current date to Date Carrier Returned Empty
+        - Don't update status code, program logic will handle that automatically
+
+Only status code we can't render automatically at this point is when a driver has delivered.
