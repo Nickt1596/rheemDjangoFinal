@@ -294,6 +294,13 @@ class CarrierCharge(models.Model):
 
     def save(self, *args, **kwargs):
         self.amountOwed = self.daysOwed * Decimal(30)
+        created = self._state.adding is True
+        if created:
+            super().save(*args, **kwargs)
+            emailTripReport = self.tripReport
+            emailShipment = self.shipment
+            emailCarrierCharge = CarrierCharge.objects.get(id=self.id)
+            sendCarrierChargeEmail(emailTripReport, emailShipment, emailCarrierCharge)
         super().save(*args, **kwargs)
 
 
@@ -322,6 +329,13 @@ class RheemCharge(models.Model):
     def save(self, *args, **kwargs):
         if self.chargeType == 'STOR':
             self.amountOwed = self.daysOwed * Decimal(50)
+        created = self._state.adding is True
+        if created:
+            super().save(*args, **kwargs)
+            dateStamp = date.today()
+            emailShipment = self.shipment
+            emailRheemCharge = RheemCharge.objects.get(id=self.id)
+            sendRheemChargeEmail(dateStamp, emailShipment, emailRheemCharge)
         super().save(*args, **kwargs)
 
 
@@ -615,6 +629,61 @@ def sendStatusEmail(trailerNumber, statusCode, date):
         subject = 'Error'
         message = 'Error'
     send_mail(subject, message, email_from, recipient_list)
+
+
+# Function below used to send Carrier Charge Notif Email
+def sendCarrierChargeEmail(tripReport, shipment, carrierCharge):
+    recipient_list = ['freightpros1@shiprrexp.com ', 'nicholas.tallarico@shiprrexp.com']
+    email_from = settings.EMAIL_HOST_USER
+    subject = 'New Carrier Charge Notification ' + str(tripReport.trailer.trailerNumber)
+    driverName = str(shipment.driverName)
+    carrier = str(shipment.carrier)
+    trailerNumber = str(tripReport.trailer.trailerNumber)
+    shipmentNumber = str(shipment.loadNumber)
+    mBol = str(shipment.masterBolNumber)
+    daysWithTrailer = str(tripReport.daysCarrPuToDeliv + tripReport.daysDelivToRetEmp)
+    daysOwed = str(tripReport.trailerDaysOwed)
+    amountOwed = str(tripReport.trailerDaysOwed * 30)
+
+    message = 'Driver Name: ' + driverName + '\n' \
+              + 'Carrier: ' + carrier + '\n' \
+              + 'Trailer #: ' + trailerNumber + '\n' \
+              + 'Shipment #: ' + shipmentNumber + '\n' \
+              + 'MBOL #: ' + mBol + '\n' \
+              + 'Days With Trailer: ' + daysWithTrailer + '\n' \
+              + 'Days Owed: ' + daysOwed + '\n' \
+              + 'Amount Owed: $' + amountOwed
+    send_mail(subject, message, email_from, recipient_list)
+
+
+def sendRheemChargeEmail(date, shipment, rheemCharge):
+    recipient_list = ['freightpros1@shiprrexp.com ', 'nicholas.tallarico@shiprrexp.com']
+    email_from = settings.EMAIL_HOST_USER
+    subject = 'New Rheem Charge Notification ' + str(shipment.loadNumber)
+    dateOfRequest = str(date)
+    bolNum = str(shipment.masterBolNumber)
+    if rheemCharge.chargeType == 'STOR':
+        accessorial = 'Storage'
+    else:
+        accessorial = 'Unknown'
+    charge = str(rheemCharge.amountOwed)
+    consignee = str(shipment.destinationCity) + ', ' + str(shipment.destinationState)
+
+    message = 'Date of Request: ' + dateOfRequest + '\n' \
+              + 'Carrier: ' + 'GT WorldWide Transport' + '\n' \
+              + 'Contact Name: ' + 'Nick Tallarico' + '\n' \
+              + 'Contact Phone: ' + '5163179038' + '\n' \
+              + 'Contact Email: ' + 'nicholas.tallarico@shiprrexp.com' + '\n' \
+              + 'BOL #: ' + bolNum + '\n' \
+              + 'Accessorial: ' + accessorial + '\n' \
+              + 'Charge: ' + '$' + charge + '\n' \
+              + 'Consignee: ' + consignee + '\n' \
+              + 'Ship Date: ' + dateOfRequest + '\n' \
+              + 'MBOL #: ' + bolNum + '\n' \
+              + 'Appt Date/Time: ' + 'N/A' + '\n' \
+              + 'Reason For Request: ' + 'Trailer was in Mexico for ' + str(rheemCharge.daysOwed + 3) + ' Which leaves ' + str(rheemCharge.daysOwed) + ' days worth of Storage Fees.'
+    send_mail(subject, message, email_from, recipient_list)
+
 
 
 ###################
