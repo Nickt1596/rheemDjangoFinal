@@ -14,8 +14,8 @@ from prettytable import PrettyTable
 import smtplib
 import os
 from email.message import EmailMessage
-from django.core.mail import send_mail
 from django.conf import settings
+from django.core.mail import send_mail
 import csv
 from geopy import distance
 from geopy.geocoders import Nominatim
