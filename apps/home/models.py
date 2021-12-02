@@ -86,17 +86,17 @@ class TrailerLocation(models.Model):
                     trailerTrip.save()
                     self.statusCode = "In Transit to receiver"
                     sendStatusEmail(self.trailer.trailerNumber, self.statusCode, date.today())
-            if oldLocation.statusCode == "In Transit to receiver":
-                trailerShipment = Shipment.objects.get(trailer=self.trailer)
-                if trailerShipment.destBottomLat <= float(self.latitude) <= trailerShipment.destTopLat and trailerShipment.destRightLong <= float(self.longitude) <= trailerShipment.destLeftLong:
-                    print("Trailer is within range of the Destination")
-                    if date.today() == trailerShipment.deliveryDate:
-                        print("We can say driver is at delivery location on delivery day")
-                    else:
-                        print("We can say driver arrived to the destination city")
-                else:
-                    if date.today() == trailerShipment.deliveryDate:
-                        print("We can say driver is not at delivery location on delivery day")
+            # if oldLocation.statusCode == "In Transit to receiver":
+            #     trailerShipment = Shipment.objects.get(trailer=self.trailer)
+            #     if trailerShipment.destBottomLat <= float(self.latitude) <= trailerShipment.destTopLat and trailerShipment.destRightLong <= float(self.longitude) <= trailerShipment.destLeftLong:
+            #         print("Trailer is within range of the Destination")
+            #         if date.today() == trailerShipment.deliveryDate:
+            #             print("We can say driver is at delivery location on delivery day")
+            #         else:
+            #             print("We can say driver arrived to the destination city")
+            #     else:
+            #         if date.today() == trailerShipment.deliveryDate:
+            #             print("We can say driver is not at delivery location on delivery day")
 
             if oldLocation.statusCode == "In Transit back to Yard":
                 current_cords = (self.latitude, self.longitude)
@@ -195,16 +195,16 @@ class Shipment(models.Model):
         trailerTrip.shipment = self
         trailerTrip.save()
 
-    def getBoundingBox(self):
-        destination = self.destinationCity + ', ' + self.destinationCity
-        geoLocator = Nominatim(user_agent="geoapiExercises")
-        location = geoLocator.geocode(destination)
-        locationDict = location.raw
-        boundingBox = locationDict["boundingbox"]
-        self.destBottomLat = float(boundingBox[0])
-        self.destTopLat = float(boundingBox[1])
-        self.destRightLong = float(boundingBox[2])
-        self.destLeftLong = float(boundingBox[3])
+    # def getBoundingBox(self):
+    #     destination = self.destinationCity + ', ' + self.destinationCity
+    #     geoLocator = Nominatim(user_agent="geoapiExercises")
+    #     location = geoLocator.geocode(destination)
+    #     locationDict = location.raw
+    #     boundingBox = locationDict["boundingbox"]
+    #     self.destBottomLat = float(boundingBox[0])
+    #     self.destTopLat = float(boundingBox[1])
+    #     self.destRightLong = float(boundingBox[2])
+    #     self.destLeftLong = float(boundingBox[3])
 
 
 class TrailerTrip(models.Model):
