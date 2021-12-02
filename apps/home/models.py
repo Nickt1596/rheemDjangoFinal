@@ -18,6 +18,7 @@ from django.core.mail import send_mail
 from django.conf import settings
 import csv
 from geopy import distance
+from geopy.geocoders import Nominatim
 
 
 # Create your models here.
@@ -85,6 +86,18 @@ class TrailerLocation(models.Model):
                     trailerTrip.save()
                     self.statusCode = "In Transit to receiver"
                     sendStatusEmail(self.trailer.trailerNumber, self.statusCode, date.today())
+            if oldLocation.statusCode == "In Transit to receiver":
+                trailerShipment = Shipment.objects.get(trailer=self.trailer)
+                if trailerShipment.destBottomLat <= float(self.latitude) <= trailerShipment.destTopLat and trailerShipment.destRightLong <= float(self.longitude) <= trailerShipment.destLeftLong:
+                    print("Trailer is within range of the Destination")
+                    if date.today() == trailerShipment.deliveryDate:
+                        print("We can say driver is at delivery location on delivery day")
+                    else:
+                        print("We can say driver arrived to the destination city")
+                else:
+                    if date.today() == trailerShipment.deliveryDate:
+                        print("We can say driver is not at delivery location on delivery day")
+
             if oldLocation.statusCode == "In Transit back to Yard":
                 current_cords = (self.latitude, self.longitude)
                 distanceBetween = distance.distance(yard_cords, current_cords).miles
@@ -108,6 +121,12 @@ class Shipment(models.Model):
     carrier = models.CharField(max_length=100, blank=True, choices=CARRIER_CHOICES, default='GW')
     destinationCity = models.CharField(max_length=70)
     destinationState = models.CharField(max_length=50)
+
+    destBottomLat = models.FloatField(null=True, blank=True)
+    destTopLat = models.FloatField(null=True, blank=True)
+    destRightLong = models.FloatField(null=True, blank=True)
+    destLeftLong = models.FloatField(null=True, blank=True)
+
     rateLineHaul = models.DecimalField(max_digits=15, decimal_places=2)
     rateFSC = models.DecimalField(max_digits=15, decimal_places=2)
     rateExtras = models.DecimalField(max_digits=15, decimal_places=2, default=0.00)
@@ -151,6 +170,9 @@ class Shipment(models.Model):
                 self.calcRate()
                 self.calcShipmentMargin()
         super().save(*args, **kwargs)
+        if self.destTopLat is None:
+            self.getBoundingBox()
+            super().save(*args, **kwargs)
 
     def calcRate(self):
         self.rateTotal = self.rateLineHaul + self.rateFSC + self.rateExtras
@@ -172,6 +194,17 @@ class Shipment(models.Model):
         trailerTrip = TrailerTrip.objects.get(trailer=self.trailer)
         trailerTrip.shipment = self
         trailerTrip.save()
+
+    def getBoundingBox(self):
+        destination = self.destinationCity + ', ' + self.destinationCity
+        geoLocator = Nominatim(user_agent="geoapiExercises")
+        location = geoLocator.geocode(destination)
+        locationDict = location.raw
+        boundingBox = locationDict["boundingbox"]
+        self.destBottomLat = float(boundingBox[0])
+        self.destTopLat = float(boundingBox[1])
+        self.destRightLong = float(boundingBox[2])
+        self.destLeftLong = float(boundingBox[3])
 
 
 class TrailerTrip(models.Model):
@@ -681,9 +714,9 @@ def sendRheemChargeEmail(date, shipment, rheemCharge):
               + 'Ship Date: ' + dateOfRequest + '\n' \
               + 'MBOL #: ' + bolNum + '\n' \
               + 'Appt Date/Time: ' + 'N/A' + '\n' \
-              + 'Reason For Request: ' + 'Trailer was in Mexico for ' + str(rheemCharge.daysOwed + 3) + ' Which leaves ' + str(rheemCharge.daysOwed) + ' days worth of Storage Fees.'
+              + 'Reason For Request: ' + 'Trailer was in Mexico for ' + str(
+        rheemCharge.daysOwed + 3) + ' Which leaves ' + str(rheemCharge.daysOwed) + ' days worth of Storage Fees.'
     send_mail(subject, message, email_from, recipient_list)
-
 
 
 ###################
