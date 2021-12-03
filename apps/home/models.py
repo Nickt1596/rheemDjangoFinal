@@ -196,7 +196,7 @@ class Shipment(models.Model):
         trailerTrip.save()
 
     def getBoundingBox(self):
-        destination = self.destinationCity + ', ' + self.destinationCity
+        destination = self.destinationCity + ', ' + self.destinationState
         geoLocator = Nominatim(user_agent="geoapiExercises")
         location = geoLocator.geocode(destination)
         locationDict = location.raw
