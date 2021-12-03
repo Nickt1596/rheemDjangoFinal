@@ -195,16 +195,16 @@ class Shipment(models.Model):
         trailerTrip.shipment = self
         trailerTrip.save()
 
-    # def getBoundingBox(self):
-    #     destination = self.destinationCity + ', ' + self.destinationCity
-    #     geoLocator = Nominatim(user_agent="geoapiExercises")
-    #     location = geoLocator.geocode(destination)
-    #     locationDict = location.raw
-    #     boundingBox = locationDict["boundingbox"]
-    #     self.destBottomLat = float(boundingBox[0])
-    #     self.destTopLat = float(boundingBox[1])
-    #     self.destRightLong = float(boundingBox[2])
-    #     self.destLeftLong = float(boundingBox[3])
+    def getBoundingBox(self):
+        destination = self.destinationCity + ', ' + self.destinationCity
+        geoLocator = Nominatim(user_agent="geoapiExercises")
+        location = geoLocator.geocode(destination)
+        locationDict = location.raw
+        boundingBox = locationDict["boundingbox"]
+        self.destBottomLat = float(boundingBox[0])
+        self.destTopLat = float(boundingBox[1])
+        self.destRightLong = float(boundingBox[2])
+        self.destLeftLong = float(boundingBox[3])
 
 
 class TrailerTrip(models.Model):
