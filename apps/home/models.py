@@ -62,51 +62,67 @@ class TrailerLocation(models.Model):
         if created:
             super().save(*args, **kwargs)
         else:
+            # TODO Reworking this Ideas
+            # Every Iteration of if Uses trailerTrip
+            dateNow = date.today()
             oldLocation = TrailerLocation.objects.get(id=self.id)
+            trailerTrip = TrailerTrip.objects.get(trailer=self.trailer)
+            # Checks if Dray Picked up
             if oldLocation.statusCode == "In Yard Empty Awaiting Dray Pickup":
                 if oldLocation.locationCountry == 'US' and self.locationCountry == 'MX':
-                    trailerTrip = TrailerTrip.objects.get(trailer=self.trailer)
-                    trailerTrip.dateDrayPickedUp = date.today()
+                    # trailerTrip = TrailerTrip.objects.get(trailer=self.trailer)
+                    trailerTrip.dateDrayPickedUp = dateNow
                     trailerTrip.save()
                     self.statusCode = "Currently Being Loaded in Mexico"
-                    sendStatusEmail(self.trailer.trailerNumber, self.statusCode, date.today())
+                    sendStatusEmail(self.trailer.trailerNumber, self.statusCode, dateNow, None)
+
+            # Checks if Dray Returned Loaded
             if oldLocation.statusCode == "Currently Being Loaded in Mexico":
                 if oldLocation.locationCountry == 'MX' and self.locationCountry == 'US':
-                    trailerTrip = TrailerTrip.objects.get(trailer=self.trailer)
-                    trailerTrip.dateDrayReturnedLoaded = date.today()
+                    # trailerTrip = TrailerTrip.objects.get(trailer=self.trailer)
+                    trailerTrip.dateDrayReturnedLoaded = dateNow
                     trailerTrip.save()
                     self.statusCode = "In Yard Loaded Awaiting Carrier Pickup"
-                    sendStatusEmail(self.trailer.trailerNumber, self.statusCode, date.today())
+                    sendStatusEmail(self.trailer.trailerNumber, self.statusCode, dateNow, None)
+
+            # Checks if Carrier Picked up Loaded
             if oldLocation.statusCode == "In Yard Loaded Awaiting Carrier Pickup":
                 current_cords = (self.latitude, self.longitude)
                 distanceBetween = distance.distance(yard_cords, current_cords).miles
                 if distanceBetween > 1.0:
-                    trailerTrip = TrailerTrip.objects.get(trailer=self.trailer)
-                    trailerTrip.dateCarrierPickedUpLoaded = date.today()
+                    # trailerTrip = TrailerTrip.objects.get(trailer=self.trailer)
+                    trailerTrip.dateCarrierPickedUpLoaded = dateNow
                     trailerTrip.save()
                     self.statusCode = "In Transit to receiver"
-                    sendStatusEmail(self.trailer.trailerNumber, self.statusCode, date.today())
-            # if oldLocation.statusCode == "In Transit to receiver":
-            #     trailerShipment = Shipment.objects.get(trailer=self.trailer)
-            #     if trailerShipment.destBottomLat <= float(self.latitude) <= trailerShipment.destTopLat and trailerShipment.destRightLong <= float(self.longitude) <= trailerShipment.destLeftLong:
-            #         print("Trailer is within range of the Destination")
-            #         if date.today() == trailerShipment.deliveryDate:
-            #             print("We can say driver is at delivery location on delivery day")
-            #         else:
-            #             print("We can say driver arrived to the destination city")
-            #     else:
-            #         if date.today() == trailerShipment.deliveryDate:
-            #             print("We can say driver is not at delivery location on delivery day")
+                    sendStatusEmail(self.trailer.trailerNumber, self.statusCode, dateNow, None)
 
+            # TODO FINISH THIS - IDEA Add More Status Codes
+            # Checks if Carrier Arrived at Delivery
+            if oldLocation.statusCode == "In Transit to receiver":
+                trailerShipment = Shipment.objects.get(trailer=self.trailer)
+                # trailerTrip = TrailerTrip.objects.get(trailer=self.trailer)
+                if trailerShipment.destBottomLat <= float(
+                        self.latitude) <= trailerShipment.destTopLat and trailerShipment.destRightLong <= float(
+                        self.longitude) <= trailerShipment.destLeftLong:
+                    print("Trailer is within range of the Destination")
+                    if dateNow == trailerShipment.deliveryDate:
+                        holderStatus = "Driver is at delivery location on delivery day"
+                    else:
+                        holderStatus = "Driver arrived to the destination city"
+                else:
+                    if dateNow == trailerShipment.deliveryDate:
+                        holderStatus = "Driver is not in Delivery City on Delivery Day"
+
+            # Checks if Carrier Returned Empty
             if oldLocation.statusCode == "In Transit back to Yard":
                 current_cords = (self.latitude, self.longitude)
                 distanceBetween = distance.distance(yard_cords, current_cords).miles
                 if distanceBetween < 1.0:
-                    trailerTrip = TrailerTrip.objects.get(trailer=self.trailer)
-                    trailerTrip.dateCarrierReturnedEmpty = date.today()
+                    # trailerTrip = TrailerTrip.objects.get(trailer=self.trailer)
+                    trailerTrip.dateCarrierReturnedEmpty = dateNow
                     trailerTrip.save()
                     self.statusCode = "In Yard Empty Awaiting Dray Pickup"
-                    sendStatusEmail(self.trailer.trailerNumber, self.statusCode, date.today())
+                    sendStatusEmail(self.trailer.trailerNumber, self.statusCode, dateNow, None)
         super().save(*args, **kwargs)
 
 
@@ -643,25 +659,52 @@ def trailerDrayEmail(trailerList):
 
 
 # Function below used to send e-mails to advice of Status Code changes
-def sendStatusEmail(trailerNumber, statusCode, date):
+def sendStatusEmail(trailerNumber, statusCode, date, loadNumber):
     recipient_list = ['freightpros1@shiprrexp.com ', 'nicholas.tallarico@shiprrexp.com']
     email_from = settings.EMAIL_HOST_USER
+    subject = getEmailSubject(statusCode, trailerNumber, loadNumber)
+    message = getEmailMessage(statusCode, trailerNumber, date, loadNumber)
+    send_mail(subject, message, email_from, recipient_list)
+
+
+def getEmailSubject(statusCode, trailerNumber, loadNumber):
     if statusCode == "Currently Being Loaded in Mexico":
         subject = 'Trailer ' + str(trailerNumber) + ' Notification: Dray has picked up'
-        message = 'Trailer ' + str(trailerNumber) + ' Has been picked by dray on ' + str(date)
     elif statusCode == "In Yard Loaded Awaiting Carrier Pickup":
         subject = 'Trailer ' + str(trailerNumber) + ' Notification: In yard loaded'
-        message = 'Trailer ' + str(trailerNumber) + ' Has been returned loaded by Dray on ' + str(date)
     elif statusCode == "In Transit to receiver":
         subject = 'Trailer ' + str(trailerNumber) + ' Notification: Carrier Picked Up'
-        message = 'Trailer ' + str(trailerNumber) + ' Has been picked by the carrier on ' + str(date)
     elif statusCode == "In Yard Empty Awaiting Dray Pickup":
         subject = 'Trailer ' + str(trailerNumber) + ' Notification: Carrier Returned Empty Trailer'
-        message = 'Trailer ' + str(trailerNumber) + ' Has been returned empty by the carrier on ' + str(date)
+    elif statusCode == "Driver is at delivery location on delivery day":
+        subject = 'Trailer ' + str(trailerNumber) + ' Notification: Driver is at Delivery Location'
+    elif statusCode == "Driver arrived to the destination city":
+        subject = 'Trailer ' + str(trailerNumber) + ' Notification: Driver is in Destination City'
+    elif statusCode == "Driver is not in Delivery City on Delivery Day":
+        subject = 'Trailer ' + str(trailerNumber) + ' Notification: Driver is not at Delivery Location'
     else:
         subject = 'Error'
+    return subject
+
+
+def getEmailMessage(statusCode, trailerNumber, date, loadNumber):
+    if statusCode == "Currently Being Loaded in Mexico":
+        message = 'Trailer ' + str(trailerNumber) + ' Has been picked by dray on ' + str(date)
+    elif statusCode == "In Yard Loaded Awaiting Carrier Pickup":
+        message = 'Trailer ' + str(trailerNumber) + ' Has been returned loaded by Dray on ' + str(date)
+    elif statusCode == "In Transit to receiver":
+        message = 'Trailer ' + str(trailerNumber) + ' Has been picked by the carrier on ' + str(date)
+    elif statusCode == "In Yard Empty Awaiting Dray Pickup":
+        message = 'Trailer ' + str(trailerNumber) + ' Has been returned empty by the carrier on ' + str(date)
+    elif statusCode == "Driver is at delivery location on delivery day":
+        message = 'Trailer ' + str(trailerNumber) + ' Driver is currently at the delivery location.'
+    elif statusCode == "Driver arrived to the destination city":
+        message = 'Trailer ' + str(trailerNumber) + ' Driver is currently in the delivery city.'
+    elif statusCode == "Driver is not in Delivery City on Delivery Day":
+        message = 'Trailer ' + str(trailerNumber) + ' Driver is not at the delivery location on delivery day.'
+    else:
         message = 'Error'
-    send_mail(subject, message, email_from, recipient_list)
+    return message
 
 
 # Function below used to send Carrier Charge Notif Email
@@ -723,7 +766,6 @@ def sendRheemChargeEmail(date, shipment, rheemCharge):
 # Query Functions #
 ###################
 def trailerLocQuery():
-    # TODO This Fixes Trailer Location Issues I was experiencing
     trailers = TrailerTrip.objects.all().values(
         'trailer__trailerNumber',
         'trailer__id',
