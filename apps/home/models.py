@@ -70,7 +70,6 @@ class TrailerLocation(models.Model):
             # Checks if Dray Picked up
             if oldLocation.statusCode == "In Yard Empty Awaiting Dray Pickup":
                 if oldLocation.locationCountry == 'US' and self.locationCountry == 'MX':
-                    # trailerTrip = TrailerTrip.objects.get(trailer=self.trailer)
                     trailerTrip.dateDrayPickedUp = dateNow
                     trailerTrip.save()
                     self.statusCode = "Currently Being Loaded in Mexico"
@@ -79,7 +78,6 @@ class TrailerLocation(models.Model):
             # Checks if Dray Returned Loaded
             if oldLocation.statusCode == "Currently Being Loaded in Mexico":
                 if oldLocation.locationCountry == 'MX' and self.locationCountry == 'US':
-                    # trailerTrip = TrailerTrip.objects.get(trailer=self.trailer)
                     trailerTrip.dateDrayReturnedLoaded = dateNow
                     trailerTrip.save()
                     self.statusCode = "In Yard Loaded Awaiting Carrier Pickup"
@@ -90,7 +88,6 @@ class TrailerLocation(models.Model):
                 current_cords = (self.latitude, self.longitude)
                 distanceBetween = distance.distance(yard_cords, current_cords).miles
                 if distanceBetween > 1.0:
-                    # trailerTrip = TrailerTrip.objects.get(trailer=self.trailer)
                     trailerTrip.dateCarrierPickedUpLoaded = dateNow
                     trailerTrip.save()
                     self.statusCode = "In Transit to receiver"
@@ -100,18 +97,35 @@ class TrailerLocation(models.Model):
             # Checks if Carrier Arrived at Delivery
             if oldLocation.statusCode == "In Transit to receiver":
                 trailerShipment = Shipment.objects.get(trailer=self.trailer)
-                # trailerTrip = TrailerTrip.objects.get(trailer=self.trailer)
-                if trailerShipment.destBottomLat <= float(
-                        self.latitude) <= trailerShipment.destTopLat and trailerShipment.destRightLong <= float(
-                        self.longitude) <= trailerShipment.destLeftLong:
-                    print("Trailer is within range of the Destination")
+                loadNumber = trailerShipment.loadNumber
+                # Checks if within range of Destination
+                if self.checkIfAtDeliv():
                     if dateNow == trailerShipment.deliveryDate:
-                        holderStatus = "Driver is at delivery location on delivery day"
+                        trailerTrip.dateCarrierDelivered = dateNow
+                        trailerTrip.save()
+                        self.statusCode = "Driver is at delivery location on delivery day"
+                        sendStatusEmail(self.trailer.trailerNumber, self.statusCode, dateNow, loadNumber)
                     else:
-                        holderStatus = "Driver arrived to the destination city"
-                else:
-                    if dateNow == trailerShipment.deliveryDate:
-                        holderStatus = "Driver is not in Delivery City on Delivery Day"
+                        self.statusCode = "Driver arrived to the destination city"
+                        sendStatusEmail(self.trailer.trailerNumber, self.statusCode, dateNow, loadNumber)
+
+            # Checks if Driver has delivered
+            if oldLocation.statusCode == "Driver is at delivery location on delivery day":
+                trailerShipment = Shipment.objects.get(trailer=self.trailer)
+                loadNumber = trailerShipment.loadNumber
+                if self.checkIfAtDeliv() is False:
+                    self.statusCode = "In Transit back to Yard"
+                    sendStatusEmail(self.trailer.trailerNumber, self.statusCode, dateNow, loadNumber)
+
+            # Checks if today is delivery day now
+            if oldLocation.statusCode == "Driver arrived to the destination city":
+                trailerShipment = Shipment.objects.get(trailer=self.trailer)
+                loadNumber = trailerShipment.loadNumber
+                if dateNow == trailerShipment.deliveryDate:
+                    trailerTrip.dateCarrierDelivered = dateNow
+                    trailerTrip.save()
+                    self.statusCode = "Driver is at delivery location on delivery day"
+                    sendStatusEmail(self.trailer.trailerNumber, self.statusCode, dateNow, loadNumber)
 
             # Checks if Carrier Returned Empty
             if oldLocation.statusCode == "In Transit back to Yard":
@@ -124,6 +138,15 @@ class TrailerLocation(models.Model):
                     self.statusCode = "In Yard Empty Awaiting Dray Pickup"
                     sendStatusEmail(self.trailer.trailerNumber, self.statusCode, dateNow, None)
         super().save(*args, **kwargs)
+
+    def checkIfAtDeliv(self):
+        trailerShipment = Shipment.objects.get(trailer=self.trailer)
+        if trailerShipment.destBottomLat <= float(
+                self.latitude) <= trailerShipment.destTopLat and trailerShipment.destRightLong <= float(
+            self.longitude) <= trailerShipment.destLeftLong:
+            return True
+        else:
+            return False
 
 
 class Shipment(models.Model):
@@ -523,7 +546,9 @@ def updateStatusCode(trailerNum, dataDict):
     elif dataDict['dateCarrierPickedUpLoaded'] is None:
         trailerLocation.statusCode = "In Yard Loaded Awaiting Carrier Pickup"
     elif dataDict['dateCarrierDelivered'] is None:
-        trailerLocation.statusCode = "In Transit to receiver"
+        # TODO NEW CODE NEEDS TESTING
+        if trailerLocation.statusCode != "Driver is at delivery location on delivery day" and trailerLocation.statusCode != "Driver arrived to the destination city" and trailerLocation.statusCode != "Driver is not in Delivery City on Delivery Day":
+            trailerLocation.statusCode = "In Transit to receiver"
     elif dataDict['dateCarrierReturnedEmpty'] is None:
         trailerLocation.statusCode = "In Transit back to Yard"
     else:
@@ -682,6 +707,8 @@ def getEmailSubject(statusCode, trailerNumber, loadNumber):
         subject = 'Trailer ' + str(trailerNumber) + ' Notification: Driver is in Destination City'
     elif statusCode == "Driver is not in Delivery City on Delivery Day":
         subject = 'Trailer ' + str(trailerNumber) + ' Notification: Driver is not at Delivery Location'
+    elif statusCode == "In Transit back to Yard":
+        subject = 'Trailer ' + str(trailerNumber) + ' Notification: Driver In Transit back to yard'
     else:
         subject = 'Error'
     return subject
@@ -702,6 +729,8 @@ def getEmailMessage(statusCode, trailerNumber, date, loadNumber):
         message = 'Trailer ' + str(trailerNumber) + ' Driver is currently in the delivery city.'
     elif statusCode == "Driver is not in Delivery City on Delivery Day":
         message = 'Trailer ' + str(trailerNumber) + ' Driver is not at the delivery location on delivery day.'
+    elif statusCode == "In Transit back to Yard":
+        message = 'Trailer ' + str(trailerNumber) + ' Driver is in transit back to the yard.'
     else:
         message = 'Error'
     return message
