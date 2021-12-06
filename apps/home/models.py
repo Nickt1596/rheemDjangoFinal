@@ -96,11 +96,11 @@ class TrailerLocation(models.Model):
             # TODO FINISH THIS - IDEA Add More Status Codes
             # Checks if Carrier Arrived at Delivery
             if oldLocation.statusCode == "In Transit to receiver":
-                trailerShipment = Shipment.objects.get(trailer=self.trailer)
-                loadNumber = trailerShipment.loadNumber
+                trailerShipment = TrailerTrip.objects.get(trailer=self.trailer)
+                loadNumber = trailerShipment.shipment.loadNumber
                 # Checks if within range of Destination
                 if self.checkIfAtDeliv():
-                    if dateNow == trailerShipment.deliveryDate:
+                    if dateNow == trailerShipment.shipment.deliveryDate:
                         trailerTrip.dateCarrierDelivered = dateNow
                         trailerTrip.save()
                         self.statusCode = "Driver is at delivery location on delivery day"
@@ -111,17 +111,17 @@ class TrailerLocation(models.Model):
 
             # Checks if Driver has delivered
             if oldLocation.statusCode == "Driver is at delivery location on delivery day":
-                trailerShipment = Shipment.objects.get(trailer=self.trailer)
-                loadNumber = trailerShipment.loadNumber
+                trailerShipment = TrailerTrip.objects.get(trailer=self.trailer)
+                loadNumber = trailerShipment.shipment.loadNumber
                 if self.checkIfAtDeliv() is False:
                     self.statusCode = "In Transit back to Yard"
                     sendStatusEmail(self.trailer.trailerNumber, self.statusCode, dateNow, loadNumber)
 
             # Checks if today is delivery day now
             if oldLocation.statusCode == "Driver arrived to the destination city":
-                trailerShipment = Shipment.objects.get(trailer=self.trailer)
-                loadNumber = trailerShipment.loadNumber
-                if dateNow == trailerShipment.deliveryDate:
+                trailerShipment = TrailerTrip.objects.get(trailer=self.trailer)
+                loadNumber = trailerShipment.shipment.loadNumber
+                if dateNow == trailerShipment.shipment.deliveryDate:
                     trailerTrip.dateCarrierDelivered = dateNow
                     trailerTrip.save()
                     self.statusCode = "Driver is at delivery location on delivery day"
@@ -140,10 +140,10 @@ class TrailerLocation(models.Model):
         super().save(*args, **kwargs)
 
     def checkIfAtDeliv(self):
-        trailerShipment = Shipment.objects.get(trailer=self.trailer)
-        if trailerShipment.destBottomLat <= float(
-                self.latitude) <= trailerShipment.destTopLat and trailerShipment.destRightLong <= float(
-            self.longitude) <= trailerShipment.destLeftLong:
+        trailerShipment = TrailerTrip.objects.get(trailer=self.trailer)
+        if trailerShipment.shipment.destBottomLat <= float(
+                self.latitude) <= trailerShipment.shipment.destTopLat and trailerShipment.shipment.destRightLong <= float(
+            self.longitude) <= trailerShipment.shipment.destLeftLong:
             return True
         else:
             return False

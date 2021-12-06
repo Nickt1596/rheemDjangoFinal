@@ -123,6 +123,7 @@ def spireon(trailerDict, driver):
     structure1 = json.loads(driver.find_element_by_tag_name('body').text)
     driver.get('https://transportation.us.spireon.com/#0')
     driver.find_element_by_css_selector("#accountsCombo-inputEl").click()
+    # TODO IF fails, original is "/html/body/div[5]/div/ul/li[1]"
     WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.XPATH, "/html/body/div[5]/div/ul/li[2]")))
     driver.find_element_by_xpath("/html/body/div[5]/div/ul/li[1]").click()
     time.sleep(1)
