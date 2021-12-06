@@ -477,7 +477,6 @@ def getTrailerCost(trailerNum):
 
 def getLocations():
     locDataDict = trailerdata.run()
-    print(locDataDict)
     for key in locDataDict.keys():
         datalist = locDataDict[key]
         updateLocation(key, datalist)
@@ -546,7 +545,6 @@ def updateStatusCode(trailerNum, dataDict):
     elif dataDict['dateCarrierPickedUpLoaded'] is None:
         trailerLocation.statusCode = "In Yard Loaded Awaiting Carrier Pickup"
     elif dataDict['dateCarrierDelivered'] is None:
-        # TODO NEW CODE NEEDS TESTING
         if trailerLocation.statusCode != "Driver is at delivery location on delivery day" and trailerLocation.statusCode != "Driver arrived to the destination city" and trailerLocation.statusCode != "Driver is not in Delivery City on Delivery Day":
             trailerLocation.statusCode = "In Transit to receiver"
     elif dataDict['dateCarrierReturnedEmpty'] is None:
@@ -686,10 +684,10 @@ def trailerDrayEmail(trailerList):
 # Function below used to send e-mails to advice of Status Code changes
 def sendStatusEmail(trailerNumber, statusCode, date, loadNumber):
     recipient_list = ['freightpros1@shiprrexp.com ', 'nicholas.tallarico@shiprrexp.com']
-    email_from = settings.EMAIL_HOST_USER
+    email_from = 'logistics@freightprostracking.com'
     subject = getEmailSubject(statusCode, trailerNumber, loadNumber)
     message = getEmailMessage(statusCode, trailerNumber, date, loadNumber)
-    send_mail(subject, message, email_from, recipient_list)
+    send_mail(subject, message, email_from, recipient_list, fail_silently=False)
 
 
 def getEmailSubject(statusCode, trailerNumber, loadNumber):
@@ -739,7 +737,7 @@ def getEmailMessage(statusCode, trailerNumber, date, loadNumber):
 # Function below used to send Carrier Charge Notif Email
 def sendCarrierChargeEmail(tripReport, shipment, carrierCharge):
     recipient_list = ['freightpros1@shiprrexp.com ', 'nicholas.tallarico@shiprrexp.com']
-    email_from = settings.EMAIL_HOST_USER
+    email_from = 'logistics@freightprostracking.com'
     subject = 'New Carrier Charge Notification ' + str(tripReport.trailer.trailerNumber)
     driverName = str(shipment.driverName)
     carrier = str(shipment.carrier)
@@ -758,12 +756,12 @@ def sendCarrierChargeEmail(tripReport, shipment, carrierCharge):
               + 'Days With Trailer: ' + daysWithTrailer + '\n' \
               + 'Days Owed: ' + daysOwed + '\n' \
               + 'Amount Owed: $' + amountOwed
-    send_mail(subject, message, email_from, recipient_list)
+    send_mail(subject, message, email_from, recipient_list, fail_silently=False)
 
 
 def sendRheemChargeEmail(date, shipment, rheemCharge):
     recipient_list = ['freightpros1@shiprrexp.com ', 'nicholas.tallarico@shiprrexp.com']
-    email_from = settings.EMAIL_HOST_USER
+    email_from = 'logistics@freightprostracking.com'
     subject = 'New Rheem Charge Notification ' + str(shipment.loadNumber)
     dateOfRequest = str(date)
     bolNum = str(shipment.masterBolNumber)
@@ -788,7 +786,7 @@ def sendRheemChargeEmail(date, shipment, rheemCharge):
               + 'Appt Date/Time: ' + 'N/A' + '\n' \
               + 'Reason For Request: ' + 'Trailer was in Mexico for ' + str(
         rheemCharge.daysOwed + 3) + ' Which leaves ' + str(rheemCharge.daysOwed) + ' days worth of Storage Fees.'
-    send_mail(subject, message, email_from, recipient_list)
+    send_mail(subject, message, email_from, recipient_list, fail_silently=False)
 
 
 ###################

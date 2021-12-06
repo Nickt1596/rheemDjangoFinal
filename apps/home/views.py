@@ -85,25 +85,25 @@ def emailForm(request):
                 recipient = form.cleaned_data['recipient']
                 subject = 'Trailer Locations'
                 message = ''
-                email_from = settings.EMAIL_HOST_USER
+                email_from = 'logistics@freightprostracking.com'
                 recipient_list = [recipient]
-                send_mail(subject, message, email_from, recipient_list, html_message=trailerLocEmail(trailers))
+                send_mail(subject, message, email_from, recipient_list, html_message=trailerLocEmail(trailers), fail_silently=False)
             elif emailType == 'ST':
                 shipments = form.cleaned_data['stSelect']
                 recipient = form.cleaned_data['recipient']
                 subject = 'In Transit Shipment Trailer Locations'
                 message = ''
-                email_from = settings.EMAIL_HOST_USER
+                email_from = 'logistics@freightprostracking.com'
                 recipient_list = [recipient]
-                send_mail(subject, message, email_from, recipient_list, html_message=shipmentTransitEmail(shipments))
+                send_mail(subject, message, email_from, recipient_list, html_message=shipmentTransitEmail(shipments), fail_silently=False)
             elif emailType == 'DPU':
                 trailers = form.cleaned_data['dpuSelect']
                 recipient = form.cleaned_data['recipient']
                 subject = 'Trailers Available For Pickup'
                 message = trailerDrayEmail(trailers)
-                email_from = settings.EMAIL_HOST_USER
+                email_from = 'logistics@freightprostracking.com'
                 recipient_list = [recipient]
-                send_mail(subject, message, email_from, recipient_list)
+                send_mail(subject, message, email_from, recipient_list, fail_silently=False)
         return redirect('trailerLocations')
     context = {'form': form}
     return render(request, "home/email-form.html", context)

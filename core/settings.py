@@ -118,11 +118,17 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 # EMAIL_HOST_USER = 'RheemTrailerUpdates@gmail.com'
 # EMAIL_HOST_PASSWORD = 'Smiley43!'
 
-EMAIL_HOST = 'smtp.mailgun.org'
-EMAIL_USE_SSL = True
-EMAIL_PORT = 465
-EMAIL_HOST_USER = 'postmaster@sandboxbe9c83a4c30f4846868a6b507dc7b1c8.mailgun.org'
-EMAIL_HOST_PASSWORD = 'a043cec9daa7a1d897956e980d1ea9dd-7b8c9ba8-707d437c'
+# EMAIL_HOST = 'smtp.mailgun.org'
+# EMAIL_USE_SSL = True
+# EMAIL_PORT = 465
+# EMAIL_HOST_USER = 'postmaster@sandboxbe9c83a4c30f4846868a6b507dc7b1c8.mailgun.org'
+# EMAIL_HOST_PASSWORD = 'a043cec9daa7a1d897956e980d1ea9dd-7b8c9ba8-707d437c'
+
+EMAIL_HOST = 'smtp.cloudmta.net'
+EMAIL_HOST_USER = '4a62f948c506dea7'
+EMAIL_HOST_PASSWORD = 'NBYocA6sG1tDx4eQminLjAxj'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
 
 # SRC: https://devcenter.heroku.com/articles/django-assets
 

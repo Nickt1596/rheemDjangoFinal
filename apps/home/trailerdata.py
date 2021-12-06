@@ -113,7 +113,6 @@ def get_driver():
 
 
 def spireon(trailerDict, driver):
-    start = time.time()
     driver.get('https://transportation.us.spireon.com/home/signin#0')
     driver.find_element_by_css_selector("input[name='username']").send_keys("FreightPros")
     driver.find_element_by_css_selector("input[name='password']").send_keys("password")
@@ -124,15 +123,13 @@ def spireon(trailerDict, driver):
     structure1 = json.loads(driver.find_element_by_tag_name('body').text)
     driver.get('https://transportation.us.spireon.com/#0')
     driver.find_element_by_css_selector("#accountsCombo-inputEl").click()
-    WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.XPATH, "/html/body/div[5]/div/ul/li[1]")))
+    WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.XPATH, "/html/body/div[5]/div/ul/li[2]")))
     driver.find_element_by_xpath("/html/body/div[5]/div/ul/li[1]").click()
     time.sleep(1)
     driver.get('https://transportation.us.spireon.com/operation/json/deviceLocationRestService/get?_dc'
                '=1634499607619&id=27541113')
     structure2 = json.loads(driver.find_element_by_tag_name('body').text)
     driver.close()
-    end = time.time()
-    print("Time for spireon(): " + str(end - start))
     spireonParse(structure1, trailerDict)
     spireonParse(structure2, trailerDict)
 
@@ -149,7 +146,6 @@ def spireonParse(structure, trailerDict):
 
 
 def skybitztesting(trailerDict, driver):
-    start = time.time()
     trailers = "546500,528687,545823,536313"
     driver.get('https://insight.skybitz.com/')
     driver.find_element_by_css_selector("input[name='strUserName']").send_keys("Freightpros")
@@ -162,8 +158,6 @@ def skybitztesting(trailerDict, driver):
     html = driver.find_element_by_css_selector('#locateAssetsTbl')
     htmltest = html.get_attribute("outerHTML")
     driver.close()
-    end = time.time()
-    print("Time for skybitztesting(): " + str(end - start))
     skybitzParse(htmltest, trailerDict)
 
 
@@ -176,11 +170,9 @@ def skybitzParse(htmltest, trailerDict):
         Longitude = table.loc[i, 'Longitude']
         t = Trailer(trailerNum, Latitude, Longitude)
         trailerDict.add_trailer(t)
-        t.printTrailer()
 
 
 def skybitztesting2(trailerDict, driver):
-    start = time.time()
     driver.get('https://insight.skybitz.com/')
     driver.find_element_by_css_selector("input[name='strUserName']").send_keys("freightpros1@gmail.com")
     driver.find_element_by_css_selector("input[name='strPassword']").send_keys("Welcome123")
@@ -192,13 +184,10 @@ def skybitztesting2(trailerDict, driver):
     html = driver.find_element_by_css_selector('#locateAssetsTbl')
     htmltest = html.get_attribute("outerHTML")
     driver.close()
-    end = time.time()
-    print("Time for skybitztesting2(): " + str(end - start))
     skybitzParse(htmltest, trailerDict)
 
 
 def xtralease(trailerDict, driver):
-    start = time.time()
     driver.get("https://secure.xtra.com/Secure/TrailerTracking/SelectTrackingProvider.aspx?ver=tt")
     driver.find_element_by_css_selector("input[name='lgnSite$UserName']").send_keys("GREATWIDE5422")
     driver.find_element_by_css_selector("input[name='lgnSite$Password']").send_keys("XTRA5423")
@@ -206,8 +195,6 @@ def xtralease(trailerDict, driver):
     driver.get('https://trailertracking.xtra.com/trailers')
     text = driver.execute_script('return trailerVOListJson')
     driver.close()
-    end = time.time()
-    print("Time for xtralease(): " + str(end - start))
     xtraleaseParse(text, trailerDict)
 
 
@@ -223,7 +210,6 @@ def xtraleaseParse(text, trailerDict):
 
 def run():
     trailerDict = TrailerDict()
-    start = time.time()
     # with ThreadPoolExecutor(max_workers=1) as executor:
     #     executor.submit(skybitztesting, trailerDict, driver=get_driver())
     #     executor.submit(skybitztesting2, trailerDict, driver=get_driver())
@@ -235,9 +221,6 @@ def run():
     skybitztesting2(trailerDict, get_driver())
     time.sleep(1)
     dict = trailerDict.get_dict()
-    end = time.time()
-    print("This is only in Test Branch")
-    print("Time for get_sheets(): " + str(end - start))
     return dict
 
 
