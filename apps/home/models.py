@@ -269,10 +269,12 @@ class TrailerTrip(models.Model):
         if self.dateDrayReturnedLoaded is not None:
             daysWithDray = (self.dateDrayReturnedLoaded - self.dateDrayPickedUp).days
             if daysWithDray > 3:
-                rheemCharge = RheemCharge(trailer=self.trailer, shipment=self.shipment, chargeType='STOR',
-                                          daysOwed=daysWithDray - 3, startDate=self.dateDrayPickedUp,
-                                          endDate=self.dateDrayReturnedLoaded)
-                rheemCharge.save()
+                # TODO VERIFICATION HERE
+                if RheemCharge.objects.filter(shipment=self.shipment).exists() is False:
+                    rheemCharge = RheemCharge(trailer=self.trailer, shipment=self.shipment, chargeType='STOR',
+                                              daysOwed=daysWithDray - 3, startDate=self.dateDrayPickedUp,
+                                              endDate=self.dateDrayReturnedLoaded)
+                    rheemCharge.save()
         if self.dateCarrierReturnedEmpty is not None:
             self.createTripReport()
         super().save(*args, **kwargs)
