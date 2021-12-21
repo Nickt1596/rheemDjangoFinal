@@ -188,7 +188,10 @@ class EmailForm(forms.Form):
     dpuSelect = MultipleChoiceField(choices=dpuChoices)
     recipient = EmailField(required=True)
 
-    widgets = {'emailChoices': Select}
+    # widgets = {'emailChoices': Select}
+    emailType.widget.attrs.update({'select class': 'selectpicker',
+                                   'data-style': 'select-with-transition',
+                                   'data-size': '7'})
 
 
 
