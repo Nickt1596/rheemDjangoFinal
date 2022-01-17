@@ -137,6 +137,7 @@ def spireon(trailerDict, driver):
 
 def spireonParse(structure, trailerDict):
     dataDict = dict(structure['data'][0])
+    print(dataDict)
     trailerNumber = dataDict['assetName']
     splitTrailer = trailerNumber.split()
     trailerNumber = splitTrailer[0]
