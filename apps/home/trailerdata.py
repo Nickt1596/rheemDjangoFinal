@@ -121,10 +121,12 @@ def spireon(trailerDict, driver):
         'https://transportation.us.spireon.com/operation/json/deviceLocationRestService/get?_dc=1634494068936&id'
         '=12849167')
     structure1 = json.loads(driver.find_element_by_tag_name('body').text)
-    print('Structure 1 Below')
-    print(structure1)
-    print('driver.find_element_by_tag_name(body).text')
-    print(driver.find_element_by_tag_name('body').text)
+
+
+    driver.get('https://transportation.us.spireon.com/operation/json/deviceLocationRestService/get?_dc=1634494068936'
+               '&id=25476467')
+    structure2 = json.loads(driver.find_element_by_tag_name('body').text)
+
 
     driver.get('https://transportation.us.spireon.com/#0')
     driver.find_element_by_css_selector("#accountsCombo-inputEl").click()
@@ -134,10 +136,11 @@ def spireon(trailerDict, driver):
     time.sleep(1)
     driver.get('https://transportation.us.spireon.com/operation/json/deviceLocationRestService/get?_dc'
                '=1634499607619&id=27541113')
-    structure2 = json.loads(driver.find_element_by_tag_name('body').text)
+    structure3 = json.loads(driver.find_element_by_tag_name('body').text)
     driver.close()
     spireonParse(structure1, trailerDict)
     spireonParse(structure2, trailerDict)
+    spireonParse(structure3, trailerDict)
 
 
 def spireonParse(structure, trailerDict):
