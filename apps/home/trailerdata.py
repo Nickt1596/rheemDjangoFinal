@@ -121,6 +121,11 @@ def spireon(trailerDict, driver):
         'https://transportation.us.spireon.com/operation/json/deviceLocationRestService/get?_dc=1634494068936&id'
         '=12849167')
     structure1 = json.loads(driver.find_element_by_tag_name('body').text)
+    print('Structure 1 Below')
+    print(structure1)
+    print('driver.find_element_by_tag_name(body).text')
+    print(driver.find_element_by_tag_name('body').text)
+
     driver.get('https://transportation.us.spireon.com/#0')
     driver.find_element_by_css_selector("#accountsCombo-inputEl").click()
     # TODO IF fails, original is "/html/body/div[5]/div/ul/li[1]"
