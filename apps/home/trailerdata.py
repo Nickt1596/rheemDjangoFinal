@@ -165,7 +165,7 @@ def skybitztesting(trailerDict, driver):
                '/AssetBasedSearchAssetsMultiple.jsp')
     driver.find_element_by_css_selector("textarea[name='assetIds']").send_keys(trailers)
     driver.find_element_by_css_selector("input[name='assetSearch']").click()
-    html = driver.find_element_by_css_selector('#assetSearch')
+    html = driver.find_element_by_css_selector("input[name='assetSearch']")
     htmltest = html.get_attribute("outerHTML")
     driver.close()
     skybitzParse(htmltest, trailerDict)
